@@ -1,9 +1,9 @@
 #!/bin/bash                    ## SLURM JOB FOR 1st HALF
 
 ##SBATCH --account=vibhavasu.phy.iith
-#SBATCH --job-name=half1      ## Name of the job
-#SBATCH --output=linEbhalf1.out    ## Output file
-#SBATCH --error=linEbhalf1.err     ## Error file
+#SBATCH --job-name=phalf1      ## Name of the job
+#SBATCH --output=linEbphalf1.out    ## Output file
+#SBATCH --error=linEbphalf1.err     ## Error file
 #SBATCH --nodes=1              ## Number of nodes
 #SBATCH --ntasks-per-node=48    ## Number of tasks per node
 #SBATCH --time=23:59:59
