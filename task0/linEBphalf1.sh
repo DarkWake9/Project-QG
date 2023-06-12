@@ -1,5 +1,3 @@
-#!/usr/bin/bash
-
 ##SBATCH --account=vibhavasu.phy.iith
 #SBATCH --job-name=phalf1      ## Name of the job
 #SBATCH --output=linEbphalf1.out    ## Output file
