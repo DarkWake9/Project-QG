@@ -1,5 +1,6 @@
 #!/bin/bash                    ## SLURM JOB FOR 1st HALF
 
+#SBATCH -A vibhavasu.phy.iith
 #SBATCH --job-name=half1      ## Name of the job
 #SBATCH --output=linEbhalf1.out    ## Output file
 #SBATCH --error=linEbhalf1.err     ## Error file
