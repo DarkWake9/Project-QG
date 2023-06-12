@@ -14,4 +14,4 @@ cd /scratch/vibhavasu.phy.iith/Project-QG/task0
 module load conda
 conda activate vibenv
 ## Execute the python script and pass the argument/input '90'
-python task0c_logeq_logl_mod2_linEb_half2.py
+srun python task0c_logeq_logl_mod2_linEb_half2.py
