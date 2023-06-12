@@ -1,4 +1,4 @@
-#!/bin/bash                    ## SLURM JOB FOR 1st HALF
+#!/usr/bin/bash
 
 ##SBATCH --account=vibhavasu.phy.iith
 #SBATCH --job-name=phalf1      ## Name of the job
