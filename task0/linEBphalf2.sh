@@ -1,6 +1,6 @@
 #!/bin/bash                    ## SLURM JOB FOR 2nd HALF
 
-#SBATCH --account=vibhavasu.phy.iith
+##SBATCH --account=vibhavasu.phy.iith
 #SBATCH --job-name=half2      ## Name of the job
 #SBATCH --output=linEbhalf2.out    ## Output file
 #SBATCH --error=linEbhalf2.err     ## Error file
