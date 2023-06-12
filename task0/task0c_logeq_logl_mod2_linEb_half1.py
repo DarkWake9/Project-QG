@@ -17,7 +17,7 @@ param_ranges_NULL = [(1e-20, 5000), (-3, 10), (-10, 3), (0, 3), (0, 4)]
 param_range_lin = [(1e-20, 1e20), (1e-20, 5000), (-3, 10), (-10, 3), (0, 3), (0, 4)]
 param_range_quad = [(1e-20, 1e15), (1e-20, 5000), (-3, 10), (-10, 3), (0, 3), (0, 4)]
 
-
+ncpu = mul.cpu_count()
 GRBs = ['GRB210619B', 'GRB210610B', 'GRB210204A', 'GRB201216C', 'GRB200829A', 'GRB200613A', 'GRB190114C', 'GRB180720B', 'GRB180703A', 'GRB171010A', 'GRB160625B', 'GRB160509A', 'GRB150821A', 'GRB150514A', 'GRB150403A', 'GRB150314A'] 
 # GRBs = [ 'GRB141028A', 'GRB140508A', 'GRB140206A', 'GRB131231A', 'GRB131108A', 'GRB130925A', 'GRB130518A', 'GRB130427A', 'GRB120119A', 'GRB100728A', 'GRB091003A', 'GRB090926A', 'GRB090618', 'GRB090328', 'GRB081221', 'GRB080916C']
 
@@ -187,7 +187,7 @@ for grb in GRBs:
 
     # NULL hypothesis
 
-    with dyn.pool.Pool(12, loglklhood_null_HP, prior_transform) as Pool:
+    with dyn.pool.Pool(ncpu, loglklhood_null_HP, prior_transform) as Pool:
         sampler0 = dyn.NestedSampler(loglklhood_null_HP, prior_transform, ndim=ndim_NULL, bound='multi', sample='rwalk', pool=Pool, nlive=nlive)
         sampler0.run_nested( dlogz=0.1)
         results0 = sampler0.results
@@ -204,7 +204,7 @@ for grb in GRBs:
         pickle.dump(sampler0, f)
 
     # Linear LIV
-    with dyn.pool.Pool(12, loglklhood_LIV_lin, prior_transform_LIV_lin) as Pool:
+    with dyn.pool.Pool(ncpu, loglklhood_LIV_lin, prior_transform_LIV_lin) as Pool:
         sampler1 = dyn.NestedSampler(loglklhood_LIV_lin, prior_transform_LIV_lin, ndim=ndim_LIV, bound='multi', sample='rwalk', pool=Pool, nlive=nlive)
         sampler1.run_nested( dlogz=0.1)
         results1 = sampler1.results
@@ -220,7 +220,7 @@ for grb in GRBs:
         pickle.dump(sampler1, f)
 
     # Quadratic LIV
-    with dyn.pool.Pool(12, loglklhood_LIV_quad, prior_transform_LIV_quad) as Pool:
+    with dyn.pool.Pool(ncpu, loglklhood_LIV_quad, prior_transform_LIV_quad) as Pool:
         sampler2 = dyn.NestedSampler(loglklhood_LIV_quad, prior_transform_LIV_quad, ndim=ndim_LIV, bound='multi', sample='rwalk', pool=Pool, nlive=nlive)
         sampler2.run_nested( dlogz=0.1)
         results2 = sampler2.results

@@ -11,6 +11,7 @@ from corner import corner
 import pandas as pd
 from scipy.stats import gaussian_kde
 
+ncpu = mul.cpu_count()
 grbparam = pd.read_csv('GRBPARAM.csv', index_col=0)
 
 param_ranges_NULL = [(1e-20, 5000), (-3, 10), (-10, 3), (0, 3), (0, 4)]
@@ -187,7 +188,7 @@ for grb in GRBs:
 
     # NULL hypothesis
 
-    with dyn.pool.Pool(12, loglklhood_null_HP, prior_transform) as Pool:
+    with dyn.pool.Pool(ncpu, loglklhood_null_HP, prior_transform) as Pool:
         sampler0 = dyn.NestedSampler(loglklhood_null_HP, prior_transform, ndim=ndim_NULL, bound='multi', sample='rwalk', pool=Pool, nlive=nlive)
         sampler0.run_nested( dlogz=0.1)
         results0 = sampler0.results
@@ -204,7 +205,7 @@ for grb in GRBs:
         pickle.dump(sampler0, f)
 
     # Linear LIV
-    with dyn.pool.Pool(12, loglklhood_LIV_lin, prior_transform_LIV_lin) as Pool:
+    with dyn.pool.Pool(ncpu, loglklhood_LIV_lin, prior_transform_LIV_lin) as Pool:
         sampler1 = dyn.NestedSampler(loglklhood_LIV_lin, prior_transform_LIV_lin, ndim=ndim_LIV, bound='multi', sample='rwalk', pool=Pool, nlive=nlive)
         sampler1.run_nested( dlogz=0.1)
         results1 = sampler1.results
@@ -220,7 +221,7 @@ for grb in GRBs:
         pickle.dump(sampler1, f)
 
     # Quadratic LIV
-    with dyn.pool.Pool(12, loglklhood_LIV_quad, prior_transform_LIV_quad) as Pool:
+    with dyn.pool.Pool(ncpu, loglklhood_LIV_quad, prior_transform_LIV_quad) as Pool:
         sampler2 = dyn.NestedSampler(loglklhood_LIV_quad, prior_transform_LIV_quad, ndim=ndim_LIV, bound='multi', sample='rwalk', pool=Pool, nlive=nlive)
         sampler2.run_nested( dlogz=0.1)
         results2 = sampler2.results
