@@ -6,4 +6,5 @@
 
 #cd $PBS_O_WORKDIR
 cd /scratch/shantanu/icecube/Project-QG/task0
+conda activate pulsar
 python3 ./task0c_logeq_logl_mod2_linEb_half2.py
