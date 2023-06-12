@@ -9,7 +9,8 @@
 #SBATCH --time=23:59:59
 
 ## Load the python interpreter
-module load python
+## module load python
+cd /scratch/vibhavasu.phy.iith/Project-QG/task0
 module load conda
 conda activate vibenv
 ## Execute the python script and pass the argument/input '90'
