@@ -96,31 +96,29 @@ for grb in GRBs:
 
 
     def loglklhood_null_HP(theta):
-        # if E0 in args:
-        # x, y, yerr = data
         log_Eb, alpha1, alpha2, mu, zeta = theta
-        model = MODEL_delta_t_intrinsic(x, log_Eb, alpha1, alpha2, mu, zeta)
-        
-        # chisq = np.sum(((y-MODEL_delta_t(x, *theta))/yerr)**2)
-        # return norm - chisq/2.0
-        return sum(stats.norm.logpdf(*args) for args in zip(y,model,yerr))
+
+        if alpha1 >= alpha2:
+            model = MODEL_delta_t_intrinsic(x, log_Eb, alpha1, alpha2, mu, zeta)
+            return sum(stats.norm.logpdf(*args) for args in zip(y,model,yerr))
+        return -np.inf
 
     def loglklhood_LIV_lin(theta1):
-        
-        logE_qg, logEb, alpha1, alpha2, mu, zeta = theta1
-        
-        model = linear(x, z_com, logE_qg, logEb, alpha1, alpha2, mu, zeta)
-        
-        return sum(stats.norm.logpdf(*rgs) for rgs in zip(y,model,yerr))
 
+        logE_qg, logEb, alpha1, alpha2, mu, zeta = theta1
+
+        if alpha1 >= alpha2:
+            model = linear(x, z_com, logE_qg, logEb, alpha1, alpha2, mu, zeta)    
+            return sum(stats.norm.logpdf(*rgs) for rgs in zip(y,model,yerr))
+        return -np.inf
 
     def loglklhood_LIV_quad(theta2):
-        
+
         logE_qg, logEb, alpha1, alpha2, mu, zeta = theta2
-        
-        model = linear(x, z_com, logE_qg, logEb, alpha1, alpha2, mu, zeta)
-        
-        return sum(stats.norm.logpdf(*rgs) for rgs in zip(y,model,yerr))
+        if alpha1 >= alpha2:
+            model = linear(x, z_com, logE_qg, logEb, alpha1, alpha2, mu, zeta)    
+            return sum(stats.norm.logpdf(*rgs) for rgs in zip(y,model,yerr))
+        return -np.inf
 
 
     def prior_transform(theta):
