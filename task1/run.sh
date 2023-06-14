@@ -16,4 +16,4 @@ cd /scratch/vibhavasu.phy.iith/Project-QG/task1
 ## module load conda
 conda activate vibenv
 ## Execute the python script and pass the argument/input '90'
-srun python task1a_dynesty.py
+python task1a_dynesty.py
