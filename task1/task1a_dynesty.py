@@ -25,7 +25,6 @@ GRBs = ['GRB210619B', 'GRB210610B', 'GRB210204A', 'GRB201216C', 'GRB200829A', 'G
 # [ 'GRB130427A', 'GRB120119A', 'GRB100728A', 'GRB091003A', 'GRB090926A', 'GRB090618', 'GRB090328', 'GRB081221', 'GRB080916C']
 
 
-# grb = GRBs[-2]
 for grb in GRBs:
     print('#'*100)
     print(grb, 'started')
@@ -160,21 +159,21 @@ for grb in GRBs:
         sampler0.run_nested(dlogz=0.01)
         
     pool0.close()
-    dyn.utils.save_sampler(sampler0, 'outputs/sampler_saves/' + grb + '_null_sampler.pkl')
+    dyn.utils.save_sampler(sampler0, os.getcwd() + 'outputs/sampler_saves/' + grb + '_null_sampler.pkl')
 
     with dyn.pool.Pool(ncpu, loglike_linear, prior_transform_linear) as pool1:
         sampler1 = dyn.NestedSampler(loglike_linear, prior_transform_linear, ndim=6, nlive = nlive, sample='rwalk', bound='multi', pool=pool1)
         sampler1.run_nested(dlogz=0.01)
         
     pool1.close()
-    dyn.utils.save_sampler(sampler1, 'outputs/sampler_saves/' + grb + '_linear_sampler.pkl')
+    dyn.utils.save_sampler(sampler1, os.getcwd() + 'outputs/sampler_saves/' + grb + '_linear_sampler.pkl')
     
     with dyn.pool.Pool(ncpu, loglike_quad, prior_transform_quadratic) as pool2:
         sampler2 = dyn.NestedSampler(loglike_quad, prior_transform_quadratic, ndim=6, nlive = nlive, sample='rwalk', bound='multi', pool=pool2)
         sampler2.run_nested(dlogz=0.01)
         
     pool2.close()
-    dyn.utils.save_sampler(sampler2, 'outputs/sampler_saves/' + grb + '_quadratic_sampler.pkl')
+    dyn.utils.save_sampler(sampler2, os.getcwd() + 'outputs/sampler_saves/' + grb + '_quadratic_sampler.pkl')
     
 
     results0 = sampler0.results
