@@ -10,8 +10,8 @@
 
 ## Load the python interpreter
 ## module load python
-cd /scratch/vibhavasu.phy.iith/Project-QG/task0
+cd /scratch/vibhavasu.phy.iith/Project-QG/task1
 ## module load conda
 conda activate vibenv
 ## Execute the python script and pass the argument/input '90'
-srun python task0c_logeq_logl_mod2_linEb_half1.py
+srun python task1a_dynesty.py
