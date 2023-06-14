@@ -7,6 +7,8 @@
 #SBATCH --nodes=1              ## Number of nodes
 #SBATCH --ntasks-per-node=48    ## Number of tasks per node
 #SBATCH --time=23:59:59
+#SBATCH --mail-user=vibhavasu2018@gmail.com
+#SBATCH --mail-type=ALL
 
 ## Load the python interpreter
 ## module load python
