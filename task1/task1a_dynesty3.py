@@ -183,20 +183,21 @@ for grb in GRBs:
 
 
     def smooth_plot(results, figname, labels=["logE_qg", "Eb(keV)", "alpha1", "alpha2", "mu", "zeta"]):
-            weights = np.exp(results.logwt - results.logz[-1])
-            samples = dyn.utils.resample_equal(  results.samples, weights)
+        plt.figure()
+        weights = np.exp(results.logwt - results.logz[-1])
+        samples = dyn.utils.resample_equal(  results.samples, weights)
+        
+        fig = corner(samples, weights=weights, labels=labels, levels=[0.68, 0.9], show_titles=True, title_kwargs={"fontsize": 12}, hist_kwargs={'density': True})
+        ndim =samples.shape[1]
+        for axidx, samps in zip([i*(ndim+1) for i in range(ndim)],samples.T):
+            kde = gaussian_kde(samps)
+            xvals = fig.axes[axidx].get_xlim()
+            xvals = np.linspace(xvals[0], xvals[1], 100)
+            fig.axes[axidx].plot(xvals, kde(xvals), color='firebrick')
             
-            fig = corner(samples, weights=weights, labels=labels, levels=[0.68, 0.9], show_titles=True, title_kwargs={"fontsize": 12}, hist_kwargs={'density': True})
-            ndim =samples.shape[1]
-            for axidx, samps in zip([i*(ndim+1) for i in range(ndim)],samples.T):
-                kde = gaussian_kde(samps)
-                xvals = fig.axes[axidx].get_xlim()
-                xvals = np.linspace(xvals[0], xvals[1], 100)
-                fig.axes[axidx].plot(xvals, kde(xvals), color='firebrick')
-                
-            plt.suptitle(str(grb))
-            plt.savefig(os.getcwd() + '/outputs/contours/' + grb + '_' + figname + '.png')
-            plt.show()
+        plt.suptitle(str(grb))
+        plt.savefig(os.getcwd() + '/outputs/contours/' + grb + '_' + figname + '.png')
+        plt.show()
 
 
     smooth_plot(results0, 'nullhp', labels=["Eb(keV)", "alpha1", "alpha2", "mu", "zeta"])
@@ -225,6 +226,7 @@ for grb in GRBs:
     liv_lin_fit = [linearhp(E[i], samples1[0], samples1[1], samples1[2], samples1[3], samples1[4], samples1[5]) for i in range(nplot)]
     liv_quad_fit = [quadhp(E[i], samples1[0], samples1[1], samples1[2], samples1[3], samples1[4], samples1[5]) for i in range(nplot)]
 
+    plt.figure()
     plt.errorbar(Erest, y, yerr, fmt='o', color='black', label='data')
     plt.plot(E, null_fit, label='Null fit')
     plt.plot(E, liv_lin_fit,label='Linear fit')
