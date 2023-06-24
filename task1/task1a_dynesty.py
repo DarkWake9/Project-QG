@@ -130,9 +130,9 @@ for grb in GRBs:
     eqglinmax = 1e20
     eqquadmin = 1e-20
     eqquadmax = 1e15
-    logeq1min = -1
+    logeq1min = 0
     logeq1max = 20
-    logeq2min = -1
+    logeq2min = 0
     logeq2max = 15
 
 
