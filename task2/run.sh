@@ -1,9 +1,9 @@
 #!/usr/bin/sh
 
 ##SBATCH --account=vibhavasu.phy.iith
-#SBATCH --job-name=fit           ## Name of the job
-#SBATCH --output=fit.out    ## Output file
-#SBATCH --error=fit.err     ## Error file
+#SBATCH --job-name=aefit           ## Name of the job
+#SBATCH --output=aefit.out    ## Output file
+#SBATCH --error=aefit.err     ## Error file
 #SBATCH --nodes=1              ## Number of nodes
 #SBATCH --ntasks-per-node=48    ## Number of tasks per node
 #SBATCH --time=3-23:59:59
