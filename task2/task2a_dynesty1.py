@@ -268,7 +268,10 @@ for grb in GRBs:
     # print('GOF for linear LIV model: ', gof_lin)
     # print('GOF for quadratic LIV model: ', gof_quad)
 
+    
 
 
 
-
+    print('#' * 150)
+    print('Finished fitting ' + grb)
+    print('#' * 150)

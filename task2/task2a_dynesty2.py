@@ -272,3 +272,6 @@ for grb in GRBs:
 
 
 
+    print('#' * 150)
+    print('Finished fitting ' + grb)
+    print('#' * 150)
