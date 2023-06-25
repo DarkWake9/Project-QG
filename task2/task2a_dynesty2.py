@@ -12,7 +12,6 @@ from corner import corner
 import pandas as pd
 from scipy.stats import gaussian_kde
 import dynesty as dyn
-import h5py
 
 
 ncpu = int(mul.cpu_count()*0.75)
@@ -32,6 +31,10 @@ GRBs = [ 'GRB150821A', 'GRB150514A', 'GRB150403A', 'GRB150314A', 'GRB141028A', '
 # grb = 'GRB130925A'
 
 for grb in GRBs:
+    print('#'*150)
+    print(grb)
+    print('#'*150)
+    
     grbname = grb + '.txt'
     grbname_wtht_ext = grbname.replace('.txt','')
 
