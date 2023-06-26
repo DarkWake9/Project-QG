@@ -30,10 +30,12 @@ GRBs = [ 'GRB150821A', 'GRB150514A', 'GRB150403A', 'GRB150314A', 'GRB141028A', '
 # grb = 'GRB210619B'
 # grb = 'GRB130925A'
 
+
 for grb in GRBs:
     print('#'*150)
     print(grb)
     print('#'*150)
+    
     
     grbname = grb + '.txt'
     grbname_wtht_ext = grbname.replace('.txt','')
@@ -181,7 +183,7 @@ for grb in GRBs:
                 
             plt.title(str(grb) + '\n\n')
             plt.savefig(os.getcwd() + '/outputs/contours/' + grb + '_' + figname + '.png')
-            plt.show()
+            # plt.show()
 
 
     smooth_plot(results0, 'nullhp', labels=["alpha", 'tau'])
@@ -212,19 +214,6 @@ for grb in GRBs:
     liv_lin_fit = [linearhp(E[i], samples1[0], samples1[1], samples1[2]) for i in range(nplot)]
     liv_quad_fit = [quadhp(E[i], samples1[0], samples1[1], samples1[2]) for i in range(nplot)]
 
-    plt.errorbar(Erest, y, yerr, fmt='o', color='black', label='data')
-    plt.plot(E, np.round(null_fit, 12), label='Null fit')
-    plt.plot(E, np.round(liv_lin_fit, 12),label='Linear fit')
-    plt.plot(E, np.round(liv_quad_fit, 12), label='Quadratic fit')
-    plt.xscale('log')
-    # plt.yscale('log')
-    plt.ylim(min(y) - max(abs(yerr)), max(y) + max(abs(yerr)))
-    # plt.ylim(-200, 20)
-    plt.legend()
-    plt.xlabel('E (keV)')
-    plt.ylabel('lag (s)')
-    plt.title(grbname_wtht_ext)
-    plt.savefig('./outputs/fits/' + grbname_wtht_ext + '_fit_logE.png', facecolor='white')
 
     # bayes_factor_lin = np.exp(results1.logz[-1] - results0.logz[-1])
     # bayes_factor_quad = np.exp(results2.logz[-1] - results0.logz[-1])
@@ -270,9 +259,24 @@ for grb in GRBs:
     # print('GOF for linear LIV model: ', gof_lin)
     # print('GOF for quadratic LIV model: ', gof_quad)
 
+    try:
+        plt.errorbar(Erest, y, yerr, fmt='o', color='black', label='data')
+        plt.plot(E, np.round(null_fit, 12), label='Null fit')
+        plt.plot(E, np.round(liv_lin_fit, 12),label='Linear fit')
+        plt.plot(E, np.round(liv_quad_fit, 12), label='Quadratic fit')
+        plt.xscale('log')
+        # plt.yscale('log')
+        plt.ylim(min(y) - max(abs(yerr)), max(y) + max(abs(yerr)))
+        # plt.ylim(-200, 20)
+        plt.legend()
+        plt.xlabel('E (keV)')
+        plt.ylabel('lag (s)')
+        plt.title(grbname_wtht_ext)
+        plt.savefig('./outputs/fits/' + grbname_wtht_ext + '_fit_logE.png', facecolor='white')
 
-
-
+    except:
+        print('Error plotting fits for ' + str(grb))
+        continue
 
     print('#' * 150)
     print('Finished fitting ' + grb)
