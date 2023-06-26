@@ -213,9 +213,9 @@ for grb in GRBs:
     liv_quad_fit = [quadhp(E[i], samples1[0], samples1[1], samples1[2]) for i in range(nplot)]
 
     plt.errorbar(Erest, y, yerr, fmt='o', color='black', label='data')
-    plt.plot(E, null_fit, label='Null fit')
-    plt.plot(E, liv_lin_fit,label='Linear fit')
-    plt.plot(E, liv_quad_fit, label='Quadratic fit')
+    plt.plot(E, np.round(null_fit, 12), label='Null fit')
+    plt.plot(E, np.round(liv_lin_fit, 12),label='Linear fit')
+    plt.plot(E, np.round(liv_quad_fit, 12), label='Quadratic fit')
     plt.xscale('log')
     # plt.yscale('log')
     plt.ylim(min(y) - max(abs(yerr)), max(y) + max(abs(yerr)))
