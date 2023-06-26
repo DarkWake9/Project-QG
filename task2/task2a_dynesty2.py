@@ -14,7 +14,7 @@ from scipy.stats import gaussian_kde
 import dynesty as dyn
 
 
-ncpu = int(mul.cpu_count()*0.75)
+ncpu = int(mul.cpu_count())
 grbparam = pd.read_csv(os.getcwd() + '/../data/GRBPARAM.csv', index_col=0)
 
 param_ranges_NULL = [(1e-20, 5000), (-3, 10), (-10, 3), (0, 3), (0, 4)]
