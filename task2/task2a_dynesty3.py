@@ -260,6 +260,7 @@ for grb in GRBs:
     # print('GOF for quadratic LIV model: ', gof_quad)
 
     try:
+        plt.figure()
         plt.errorbar(Erest, y, yerr, fmt='o', color='black', label='data')
         plt.plot(E, np.round(null_fit, 12), label='Null fit')
         plt.plot(E, np.round(liv_lin_fit, 12),label='Linear fit')

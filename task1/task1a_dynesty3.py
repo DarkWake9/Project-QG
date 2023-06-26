@@ -25,7 +25,6 @@ param_range_quad = [(1e-20, 1e15), (1e-20, 5000), (-3, 10), (-10, 3), (0, 3), (0
 GRBs = [ 'GRB130427A', 'GRB120119A', 'GRB100728A', 'GRB091003A', 'GRB090926A', 'GRB090618', 'GRB090328', 'GRB081221', 'GRB080916C']
 
 
-# grb = GRBs[-2]
 for grb in GRBs:
     print('#'*100)
     print(grb, 'started')
@@ -56,9 +55,9 @@ for grb in GRBs:
     #MODELS
 
     #NULL model
-    def nullhp(E, logEb, alpha1, alpha2, mu, zeta):
+    def nullhp(E, Eb, alpha1, alpha2, mu, zeta):
         
-        eob = (E - E0) / (logEb)
+        eob = (E - E0) / (Eb)
         
         return zeta * (eob**alpha1) * ((0.5 * ((1 + eob)**(1/mu))) ** ((alpha2 - alpha1) * mu))
 
@@ -71,45 +70,45 @@ for grb in GRBs:
     int_z2 = np.asarray(int_z(z_com, 2))
 
     #LINEAR model
-    def linearhp(E, logEqg, logEb, alpha1, alpha2, mu, zeta):
+    def linearhp(E, logEqg, Eb, alpha1, alpha2, mu, zeta):
         
         e0qg = (E - E0) / (10 ** logEqg)
         
-        return - (e0qg * int_z1)/H0 + nullhp(E, logEb, alpha1, alpha2, mu, zeta)
+        return - (e0qg * int_z1)/H0 + nullhp(E, Eb, alpha1, alpha2, mu, zeta)
 
     #QUADRATIC model
-    def quadhp(E, logEqg, logEb, alpha1, alpha2, mu, zeta):
+    def quadhp(E, logEqg, Eb, alpha1, alpha2, mu, zeta):
         e0qg = (E**2 - E0 **2) / ((10 ** logEqg)**2)
         
-        return -1.5 * (e0qg * int_z2)/H0 + nullhp(E, logEb, alpha1, alpha2, mu, zeta)
+        return -1.5 * (e0qg * int_z2)/H0 + nullhp(E, Eb, alpha1, alpha2, mu, zeta)
 
 
     #LOG-LIKELIHOODS
     def loglike_null(theta):
-        logEb, alpha1, alpha2, mu, zeta = theta
+        Eb, alpha1, alpha2, mu, zeta = theta
         
         if alpha1 >= alpha2:
-            model = nullhp(x,  logEb, alpha1, alpha2, mu, zeta)
+            model = nullhp(x,  Eb, alpha1, alpha2, mu, zeta)
             
             return sum(stats.norm.logpdf(*args) for args in zip(y,model,yerr))
         
         return -np.inf
 
     def loglike_linear(theta):
-        logEqg, logEb, alpha1, alpha2, mu, zeta = theta
+        logEqg, Eb, alpha1, alpha2, mu, zeta = theta
         
         if alpha1 >= alpha2:
-            model = linearhp(x, logEqg, logEb, alpha1, alpha2, mu, zeta)
+            model = linearhp(x, logEqg, Eb, alpha1, alpha2, mu, zeta)
             
             return sum(stats.norm.logpdf(*args) for args in zip(y,model,yerr))
         
         return -np.inf
 
     def loglike_quad(theta):
-        logEqg, logEb, alpha1, alpha2, mu, zeta = theta
+        logEqg, Eb, alpha1, alpha2, mu, zeta = theta
         
         if alpha1 >= alpha2:
-            model = quadhp(x, logEqg, logEb, alpha1, alpha2, mu, zeta)
+            model = quadhp(x, logEqg, Eb, alpha1, alpha2, mu, zeta)
             
             return sum(stats.norm.logpdf(*args) for args in zip(y,model,yerr))
         
@@ -117,10 +116,10 @@ for grb in GRBs:
 
 
     #PRIORS
-    logEbmax = 5000 #keV
-    logEbmin = 0
+    Ebmax = 5000 #keV
+    Ebmin = 0
     alpha1min = -3
-    alpha1max = 10
+    alpha1max = 10  
     alpha2min = -10
     alpha2max = 3
     mumin = 0
@@ -140,16 +139,16 @@ for grb in GRBs:
     #PRIOR DISTRIBUTIONS
 
     def prior_transform_null(theta):
-        logEb, alpha1, alpha2, mu, zeta = theta
-        return [logEbmax * logEb + logEbmin, (alpha1max - alpha1min) * alpha1 + alpha1min, (alpha2max - alpha2min) * alpha2 + alpha2min, (mumax - mumin) * mu + mumin, (zetamax - zetamin) * zeta + zetamin]
+        Eb, alpha1, alpha2, mu, zeta = theta
+        return [Ebmax * Eb + Ebmin, (alpha1max - alpha1min) * alpha1 + alpha1min, (alpha2max - alpha2min) * alpha2 + alpha2min, (mumax - mumin) * mu + mumin, (zetamax - zetamin) * zeta + zetamin]
 
     def prior_transform_linear(theta):
-        logEqg, logEb, alpha1, alpha2, mu, zeta = theta
-        return [(logeq1max - logeq1min) * logEqg + logeq1min, logEbmax * logEb + logEbmin, (alpha1max - alpha1min) * alpha1 + alpha1min, (alpha2max - alpha2min) * alpha2 + alpha2min, mumax * mu + mumin, zetamax * zeta + zetamin]
+        logEqg, Eb, alpha1, alpha2, mu, zeta = theta
+        return [(logeq1max - logeq1min) * logEqg + logeq1min, Ebmax * Eb + Ebmin, (alpha1max - alpha1min) * alpha1 + alpha1min, (alpha2max - alpha2min) * alpha2 + alpha2min, mumax * mu + mumin, zetamax * zeta + zetamin]
 
     def prior_transform_quadratic(theta):
-        logEqg, logEb, alpha1, alpha2, mu, zeta = theta
-        return [(logeq2max - logeq2min) * logEqg + logeq2min, logEbmax * logEb + logEbmin, (alpha1max - alpha1min) * alpha1 + alpha1min, (alpha2max - alpha2min) * alpha2 + alpha2min, mumax * mu + mumin, zetamax * zeta + zetamin]
+        logEqg, Eb, alpha1, alpha2, mu, zeta = theta
+        return [(logeq2max - logeq2min) * logEqg + logeq2min, Ebmax * Eb + Ebmin, (alpha1max - alpha1min) * alpha1 + alpha1min, (alpha2max - alpha2min) * alpha2 + alpha2min, mumax * mu + mumin, zetamax * zeta + zetamin]
 
 
     #SAMPLING
@@ -197,7 +196,7 @@ for grb in GRBs:
             
         plt.suptitle(str(grb))
         plt.savefig(os.getcwd() + '/outputs/contours/' + grb + '_' + figname + '.png')
-        plt.show()
+        # plt.show()
 
 
     smooth_plot(results0, 'nullhp', labels=["Eb(keV)", "alpha1", "alpha2", "mu", "zeta"])
@@ -207,6 +206,7 @@ for grb in GRBs:
 
 
     smooth_plot(results2, 'quadhp', labels=["logE_qg", "Eb(keV)", "alpha1", "alpha2", "mu", "zeta"])
+
 
     #PLOTTING FITS
 
@@ -227,6 +227,7 @@ for grb in GRBs:
     liv_lin_fit = [linearhp(E[i], samples1[0], samples1[1], samples1[2], samples1[3], samples1[4], samples1[5]) for i in range(nplot)]
     liv_quad_fit = [quadhp(E[i], samples1[0], samples1[1], samples1[2], samples1[3], samples1[4], samples1[5]) for i in range(nplot)]
 
+    plt.figure()
     plt.errorbar(Erest, y, yerr, fmt='o', color='black', label='data')
     plt.plot(E, null_fit, label='Null fit')
     plt.plot(E, liv_lin_fit,label='Linear fit')
@@ -239,9 +240,8 @@ for grb in GRBs:
     plt.xlabel('E (keV)')
     plt.ylabel('lag (s)')
     plt.title(grbname_wtht_ext)
-    plt.savefig(os.getcwd() + '/outputs/fits/' + grbname_wtht_ext + '_fit_logE.png', facecolor='white')
     plt.show()
-
+    plt.savefig(os.getcwd() + '/outputs/fits/' + grbname_wtht_ext + '_fit_logE.png', facecolor='white')
     # bayes_factor_lin = np.exp(results1.logz[-1] - results0.logz[-1])
     # bayes_factor_quad = np.exp(results2.logz[-1] - results0.logz[-1])
 
@@ -256,7 +256,7 @@ for grb in GRBs:
 
     f.close()
     f = []
-    
+
     #SAVING GOODNESS OF FIT
 
     def chi2_gof(x, y, yerr, fit_func, *fit_func_args):

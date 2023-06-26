@@ -196,7 +196,7 @@ for grb in GRBs:
             
         plt.suptitle(str(grb))
         plt.savefig(os.getcwd() + '/outputs/contours/' + grb + '_' + figname + '.png')
-        plt.show()
+        # plt.show()
 
 
     smooth_plot(results0, 'nullhp', labels=["Eb(keV)", "alpha1", "alpha2", "mu", "zeta"])
@@ -227,6 +227,7 @@ for grb in GRBs:
     liv_lin_fit = [linearhp(E[i], samples1[0], samples1[1], samples1[2], samples1[3], samples1[4], samples1[5]) for i in range(nplot)]
     liv_quad_fit = [quadhp(E[i], samples1[0], samples1[1], samples1[2], samples1[3], samples1[4], samples1[5]) for i in range(nplot)]
 
+    plt.figure()
     plt.errorbar(Erest, y, yerr, fmt='o', color='black', label='data')
     plt.plot(E, null_fit, label='Null fit')
     plt.plot(E, liv_lin_fit,label='Linear fit')
@@ -239,9 +240,8 @@ for grb in GRBs:
     plt.xlabel('E (keV)')
     plt.ylabel('lag (s)')
     plt.title(grbname_wtht_ext)
-    plt.savefig(os.getcwd() + '/outputs/fits/' + grbname_wtht_ext + '_fit_logE.png', facecolor='white')
     plt.show()
-
+    plt.savefig(os.getcwd() + '/outputs/fits/' + grbname_wtht_ext + '_fit_logE.png', facecolor='white')
     # bayes_factor_lin = np.exp(results1.logz[-1] - results0.logz[-1])
     # bayes_factor_quad = np.exp(results2.logz[-1] - results0.logz[-1])
 
