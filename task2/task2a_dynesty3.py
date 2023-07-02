@@ -1,6 +1,3 @@
-# ### EQNS FROM https://arxiv.org/pdf/2102.11248.pdf ONLY
-
-
 import numpy as np
 import os
 import matplotlib.pyplot as plt
@@ -12,7 +9,6 @@ from corner import corner
 import pandas as pd
 from scipy.stats import gaussian_kde
 import dynesty as dyn
-
 
 
 ncpu = int(mul.cpu_count())
@@ -28,15 +24,8 @@ param_range_quad = [(1e-20, 1e15), (1e-20, 5000), (-3, 10), (-10, 3), (0, 3), (0
 # [ 'GRB150821A', 'GRB150514A', 'GRB150403A', 'GRB150314A', 'GRB141028A', 'GRB140508A', 'GRB140206A', 'GRB131231A', 'GRB131108A', 'GRB130925A', 'GRB130518A']
 GRBs = [ 'GRB130427A', 'GRB120119A', 'GRB100728A', 'GRB091003A', 'GRB090926A', 'GRB090618', 'GRB090328', 'GRB081221', 'GRB080916C']
 
-# grb = 'GRB210619B'
-# grb = 'GRB130925A'
-
 for grb in GRBs:
-    print('#'*150)
-    print(grb)
-    print('#'*150)
-    
-    
+
     grbname = grb + '.txt'
     grbname_wtht_ext = grbname.replace('.txt','')
 
@@ -55,6 +44,11 @@ for grb in GRBs:
     H0=67.36 #Hubble constant km -1 Mpc s -1
     omega_m = 0.315
     omega_l = 1 - omega_m
+    lin_conv_fac = 3.0856 * 10**13
+    quad_conv_fac = 3.0856 * 10**7
+
+
+
 
 
     #MODELS
@@ -77,13 +71,13 @@ for grb in GRBs:
         
         e0qg = (E - E0) / (10 ** logEqg)
         
-        return - (e0qg * int_z1)/H0 + nullhp(E, alpha, tau)
+        return - (lin_conv_fac * e0qg * int_z1)/H0 + nullhp(E, alpha, tau)
 
     #QUADRATIC model
     def quadhp(E, logEqg, alpha, tau):
         e0qg = (E**2 - E0 **2) / ((10 ** logEqg)**2)
         
-        return -1.5 * (e0qg * int_z2)/H0 + nullhp(E, alpha, tau)
+        return -1.5 * (lin_conv_fac * e0qg * int_z2)/H0 + nullhp(E, alpha, tau)
 
 
     #LOG-LIKELIHOODS
@@ -113,21 +107,13 @@ for grb in GRBs:
 
 
     #PRIORS
-    # 130925A
-    # alphamin = -2
-    # alphamax = 0.1
-    # taumin = -50
-    # taumax = 100
-    # logeqmin = 6
-    # logeqmax = 19
 
-
-    alphamin = -1
+    alphamin = -2
     alphamax = 1
-    taumin = -10
+    taumin = -15
     taumax = 10
-    logeqmin = 6
-    logeqmax = 19
+    logeqmin = 0
+    logeqmax = 20
 
 
     #PRIOR DISTRIBUTIONS
@@ -181,9 +167,9 @@ for grb in GRBs:
                 xvals = np.linspace(xvals[0], xvals[1], 100)
                 fig.axes[axidx].plot(xvals, kde(xvals), color='firebrick')
                 
-            plt.title(str(grb) + '\n\n')
+            # plt.title(str(grb) + '\n\n')
+            plt.suptitle(str(grb) + '\n\n', x=0.75, y=0.75)
             plt.savefig(os.getcwd() + '/outputs/contours/' + grb + '_' + figname + '.png')
-            # plt.show()
 
 
     smooth_plot(results0, 'nullhp', labels=["alpha", 'tau'])
@@ -212,8 +198,23 @@ for grb in GRBs:
     samples2 = samples2[np.argmax(results2.logl)]
     null_fit = [nullhp(E[i], samples0[0], samples0[1]) for i in range(nplot)]
     liv_lin_fit = [linearhp(E[i], samples1[0], samples1[1], samples1[2]) for i in range(nplot)]
-    liv_quad_fit = [quadhp(E[i], samples1[0], samples1[1], samples1[2]) for i in range(nplot)]
+    liv_quad_fit = [quadhp(E[i], samples2[0], samples2[1], samples2[2]) for i in range(nplot)]
 
+    plt.figure()
+    plt.errorbar(x, y, yerr, fmt='o', color='black', label='data')
+    plt.plot(E, null_fit, label='Null fit')
+    plt.plot(E, liv_lin_fit,label='Linear fit')
+    plt.plot(E, liv_quad_fit, label='Quadratic fit')
+    plt.xscale('log')
+    # plt.yscale('log')
+    plt.ylim(min(y) - max(abs(yerr)), max(y) + max(abs(yerr)))
+    # plt.ylim(-200, 20)
+    plt.legend()
+    plt.xlabel('E (keV)')
+    plt.ylabel('lag (s)')
+    plt.title(grbname_wtht_ext)
+    plt.savefig(os.getcwd() + '/outputs/fits/' + grbname_wtht_ext + '_fit_logE.png', facecolor='white')
+    plt.show()
 
     # bayes_factor_lin = np.exp(results1.logz[-1] - results0.logz[-1])
     # bayes_factor_quad = np.exp(results2.logz[-1] - results0.logz[-1])
@@ -237,13 +238,12 @@ for grb in GRBs:
 
 
     def chi2_gof(x, y, yerr, fit_func, *fit_func_args):
-        
         return np.sum(((y - fit_func(x, *fit_func_args))/yerr)**2)/(len(y) - len(fit_func_args))
 
 
-    gof_null = chi2_gof(Erest, y, yerr, nullhp, samples0[0], samples0[1])
-    gof_lin = chi2_gof(Erest, y, yerr, linearhp, samples1[0], samples1[1], samples1[2])
-    gof_quad = chi2_gof(Erest, y, yerr, quadhp, samples2[0], samples2[1], samples2[2])
+    gof_null = chi2_gof(x, y, yerr, nullhp, samples0[0], samples0[1])
+    gof_lin = chi2_gof(x, y, yerr, linearhp, samples1[0], samples1[1], samples1[2])
+    gof_quad = chi2_gof(x, y, yerr, quadhp, samples2[0], samples2[1], samples2[2])
 
 
     with open('outputs/GOF/' + grb + '_GOF.txt', 'w') as f:
@@ -253,32 +253,3 @@ for grb in GRBs:
         
     f.close()
     f = []
-    
-
-    # print('GOF for null model: ', gof_null)
-    # print('GOF for linear LIV model: ', gof_lin)
-    # print('GOF for quadratic LIV model: ', gof_quad)
-
-    try:
-        plt.figure()
-        plt.errorbar(Erest, y, yerr, fmt='o', color='black', label='data')
-        plt.plot(E, np.round(null_fit, 12), label='Null fit')
-        plt.plot(E, np.round(liv_lin_fit, 12),label='Linear fit')
-        plt.plot(E, np.round(liv_quad_fit, 12), label='Quadratic fit')
-        plt.xscale('log')
-        # plt.yscale('log')
-        plt.ylim(min(y) - max(abs(yerr)), max(y) + max(abs(yerr)))
-        # plt.ylim(-200, 20)
-        plt.legend()
-        plt.xlabel('E (keV)')
-        plt.ylabel('lag (s)')
-        plt.title(grbname_wtht_ext)
-        plt.savefig('./outputs/fits/' + grbname_wtht_ext + '_fit_logE.png', facecolor='white')
-
-    except:
-        print('Error plotting fits for ' + str(grb))
-        continue
-
-    print('#' * 150)
-    print('Finished fitting ' + grb)
-    print('#' * 150)

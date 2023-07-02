@@ -1,4 +1,3 @@
-# ### USE EQNS FROM THE CHINESE PAPER ONLY
 import numpy as np
 import os
 import matplotlib.pyplot as plt
@@ -10,9 +9,10 @@ from corner import corner
 import pandas as pd
 from scipy.stats import gaussian_kde
 import dynesty as dyn
+import h5py
 
 
-ncpu = int(mul.cpu_count())
+ncpu = int(mul.cpu_count()*0.75)
 grbparam = pd.read_csv(os.getcwd() + '/../data/GRBPARAM.csv', index_col=0)
 
 param_ranges_NULL = [(1e-20, 5000), (-3, 10), (-10, 3), (0, 3), (0, 4)]
@@ -24,11 +24,9 @@ param_range_quad = [(1e-20, 1e15), (1e-20, 5000), (-3, 10), (-10, 3), (0, 3), (0
 # [ 'GRB150821A', 'GRB150514A', 'GRB150403A', 'GRB150314A', 'GRB141028A', 'GRB140508A', 'GRB140206A', 'GRB131231A', 'GRB131108A', 'GRB130925A', 'GRB130518A']
 GRBs = [ 'GRB130427A', 'GRB120119A', 'GRB100728A', 'GRB091003A', 'GRB090926A', 'GRB090618', 'GRB090328', 'GRB081221', 'GRB080916C']
 
-
+# grb = 'GRB190114C'
+# grb = 'GRB130925A'
 for grb in GRBs:
-    print('#'*100)
-    print(grb, 'started')
-    print('#'*100)
     grbname = grb + '.txt'
     grbname_wtht_ext = grbname.replace('.txt','')
 
@@ -48,8 +46,11 @@ for grb in GRBs:
     omega_m = 0.315
     omega_l = 1 - omega_m
 
+    lin_conv_fac = 3.0856 * 10**13
+    quad_conv_fac = 3.0856 * 10**7
 
 
+    grb
 
 
     #MODELS
@@ -74,13 +75,13 @@ for grb in GRBs:
         
         e0qg = (E - E0) / (10 ** logEqg)
         
-        return - (e0qg * int_z1)/H0 + nullhp(E, Eb, alpha1, alpha2, mu, zeta)
+        return - (lin_conv_fac * e0qg * int_z1)/H0 + nullhp(E, Eb, alpha1, alpha2, mu, zeta)
 
     #QUADRATIC model
     def quadhp(E, logEqg, Eb, alpha1, alpha2, mu, zeta):
         e0qg = (E**2 - E0 **2) / ((10 ** logEqg)**2)
         
-        return -1.5 * (e0qg * int_z2)/H0 + nullhp(E, Eb, alpha1, alpha2, mu, zeta)
+        return -1.5 * (quad_conv_fac * e0qg * int_z2)/H0 + nullhp(E, Eb, alpha1, alpha2, mu, zeta)
 
 
     #LOG-LIKELIHOODS
@@ -116,20 +117,17 @@ for grb in GRBs:
 
 
     #PRIORS
-    Ebmax = 5000 #keV
+    Ebmax = 5 #keV
     Ebmin = 0
     alpha1min = -3
-    alpha1max = 10  
+    alpha1max = 10
     alpha2min = -10
     alpha2max = 3
     mumin = 0
     mumax = 3
     zetamin = 0
     zetamax = 4
-    eqglinmin = 1e-20
-    eqglinmax = 1e20
-    eqquadmin = 1e-20
-    eqquadmax = 1e15
+
     logeq1min = 0
     logeq1max = 20
     logeq2min = 0
@@ -153,28 +151,22 @@ for grb in GRBs:
 
     #SAMPLING
     nlive = 1024
-    
+
     with dyn.pool.Pool(ncpu, loglike_null, prior_transform_null) as pool0:
         sampler0 = dyn.NestedSampler(loglike_null, prior_transform_null, ndim=5, nlive = nlive, sample='rwalk', bound='multi', pool=pool0)
-        sampler0.run_nested(dlogz=0.001)
-        
-    pool0.close()
-    dyn.utils.save_sampler(sampler0, os.getcwd() + '/outputs/sampler_saves/' + grb + '_null_sampler.pkl')
+        sampler0.run_nested(dlogz=0.01)
+        # sampler0.save(os.getcwd() + '/outputs/sampler_saves/' + grbname_wtht_ext + '_null_sampler.dill', store_samples=True)
+
 
     with dyn.pool.Pool(ncpu, loglike_linear, prior_transform_linear) as pool1:
         sampler1 = dyn.NestedSampler(loglike_linear, prior_transform_linear, ndim=6, nlive = nlive, sample='rwalk', bound='multi', pool=pool1)
-        sampler1.run_nested(dlogz=0.001)
-        
-    pool1.close()
-    dyn.utils.save_sampler(sampler1, os.getcwd() + '/outputs/sampler_saves/' + grb + '_linear_sampler.pkl')
-    
+        sampler1.run_nested(dlogz=0.01)
+
+
     with dyn.pool.Pool(ncpu, loglike_quad, prior_transform_quadratic) as pool2:
         sampler2 = dyn.NestedSampler(loglike_quad, prior_transform_quadratic, ndim=6, nlive = nlive, sample='rwalk', bound='multi', pool=pool2)
-        sampler2.run_nested(dlogz=0.001)
-        
-    pool2.close()
-    dyn.utils.save_sampler(sampler2, os.getcwd() + '/outputs/sampler_saves/' + grb + '_quadratic_sampler.pkl')
-    
+        sampler2.run_nested(dlogz=0.01)
+
 
     results0 = sampler0.results
     results1 = sampler1.results
@@ -182,21 +174,20 @@ for grb in GRBs:
 
 
     def smooth_plot(results, figname, labels=["logE_qg", "Eb(keV)", "alpha1", "alpha2", "mu", "zeta"]):
-        plt.figure()
-        weights = np.exp(results.logwt - results.logz[-1])
-        samples = dyn.utils.resample_equal(  results.samples, weights)
-        
-        fig = corner(samples, weights=weights, labels=labels, levels=[0.68, 0.9], show_titles=True, title_kwargs={"fontsize": 12}, hist_kwargs={'density': True})
-        ndim =samples.shape[1]
-        for axidx, samps in zip([i*(ndim+1) for i in range(ndim)],samples.T):
-            kde = gaussian_kde(samps)
-            xvals = fig.axes[axidx].get_xlim()
-            xvals = np.linspace(xvals[0], xvals[1], 100)
-            fig.axes[axidx].plot(xvals, kde(xvals), color='firebrick')
+            weights = np.exp(results.logwt - results.logz[-1])
+            samples = dyn.utils.resample_equal(  results.samples, weights)
             
-        plt.suptitle(str(grb))
-        plt.savefig(os.getcwd() + '/outputs/contours/' + grb + '_' + figname + '.png')
-        # plt.show()
+            fig = corner(samples, weights=weights, labels=labels, levels=[0.68, 0.9], show_titles=True, title_kwargs={"fontsize": 12}, hist_kwargs={'density': True})
+            ndim =samples.shape[1]
+            for axidx, samps in zip([i*(ndim+1) for i in range(ndim)],samples.T):
+                kde = gaussian_kde(samps)
+                xvals = fig.axes[axidx].get_xlim()
+                xvals = np.linspace(xvals[0], xvals[1], 100)
+                fig.axes[axidx].plot(xvals, kde(xvals), color='firebrick')
+                
+            plt.suptitle(str(grb))
+            plt.savefig(os.getcwd() + '/outputs/contours/' + grb + '_' + figname + '.png')
+            # plt.show()
 
 
     smooth_plot(results0, 'nullhp', labels=["Eb(keV)", "alpha1", "alpha2", "mu", "zeta"])
@@ -206,6 +197,12 @@ for grb in GRBs:
 
 
     smooth_plot(results2, 'quadhp', labels=["logE_qg", "Eb(keV)", "alpha1", "alpha2", "mu", "zeta"])
+
+
+    results0.samples[np.argmax(results0.logl)]
+
+
+
 
 
     #PLOTTING FITS
@@ -225,7 +222,7 @@ for grb in GRBs:
     samples2 = samples2[np.argmax(results2.logl)]
     null_fit = [nullhp(E[i], samples0[0], samples0[1], samples0[2], samples0[3], samples0[4]) for i in range(nplot)]
     liv_lin_fit = [linearhp(E[i], samples1[0], samples1[1], samples1[2], samples1[3], samples1[4], samples1[5]) for i in range(nplot)]
-    liv_quad_fit = [quadhp(E[i], samples1[0], samples1[1], samples1[2], samples1[3], samples1[4], samples1[5]) for i in range(nplot)]
+    liv_quad_fit = [quadhp(E[i], samples2[0], samples2[1], samples2[2], samples2[3], samples2[4], samples2[5]) for i in range(nplot)]
 
     plt.figure()
     plt.errorbar(Erest, y, yerr, fmt='o', color='black', label='data')
@@ -240,8 +237,9 @@ for grb in GRBs:
     plt.xlabel('E (keV)')
     plt.ylabel('lag (s)')
     plt.title(grbname_wtht_ext)
-    plt.show()
     plt.savefig(os.getcwd() + '/outputs/fits/' + grbname_wtht_ext + '_fit_logE.png', facecolor='white')
+    plt.show()
+
     # bayes_factor_lin = np.exp(results1.logz[-1] - results0.logz[-1])
     # bayes_factor_quad = np.exp(results2.logz[-1] - results0.logz[-1])
 
@@ -253,20 +251,21 @@ for grb in GRBs:
         f.write(str(results0.logz[-1]) + ',' + str(results0.logzerr[-1]) + '\n')
         f.write(str(results1.logz[-1]) + ',' + str(results1.logzerr[-1]) + '\n')
         f.write(str(results2.logz[-1]) + ',' + str(results2.logzerr[-1]) + '\n')
-
+        
     f.close()
     f = []
 
-    #SAVING GOODNESS OF FIT
+
+    dyn.utils.save_sampler(sampler0, 'outputs/sampler_saves/' + grb + '_null_sampler.pkl')
+    dyn.utils.save_sampler(sampler1, 'outputs/sampler_saves/' + grb + '_linear_sampler.pkl')
+    dyn.utils.save_sampler(sampler2, 'outputs/sampler_saves/' + grb + '_quadratic_sampler.pkl')
+
 
     def chi2_gof(x, y, yerr, fit_func, *fit_func_args):
-        '''
-            Calculates the chi2/DOF for the function
-        '''    
+        
         return np.sum(((y - fit_func(x, *fit_func_args))/yerr)**2)/(len(y) - len(fit_func_args))
-    
-    
-    
+
+
     gof_null = chi2_gof(Erest, y, yerr, nullhp, samples0[0], samples0[1], samples0[2], samples0[3], samples0[4])
     gof_lin = chi2_gof(Erest, y, yerr, linearhp, samples1[0], samples1[1], samples1[2], samples1[3], samples1[4], samples1[5])
     gof_quad = chi2_gof(Erest, y, yerr, quadhp, samples2[0], samples2[1], samples2[2], samples2[3], samples2[4], samples2[5])
@@ -279,9 +278,3 @@ for grb in GRBs:
         
     f.close()
     f = []
-
-
-    
-    print('#'*150)
-    print('Done with ' + grb + '!')
-    print('#'*150)
