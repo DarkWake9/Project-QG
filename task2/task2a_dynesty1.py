@@ -52,7 +52,7 @@ for grb in GRBs:
     E0rest = E0
     Erest = arr[:,0]    #in keV
     z_com = grbparam[grbname.replace('.txt','')].redshift #redshift
-    H0=67.36 #Hubble constant km -1 Mpc s -1
+    H0=67.36 #Hubble constant km Mpc -1 s -1
     omega_m = 0.315
     omega_l = 1 - omega_m
 
