@@ -77,7 +77,7 @@ for grb in GRBs:
     def quadhp(E, logEqg, alpha, tau):
         e0qg = (E**2 - E0 **2) / ((10 ** logEqg)**2)
         
-        return -1.5 * (lin_conv_fac * e0qg * int_z2)/H0 + nullhp(E, alpha, tau)
+        return -1.5 * (quad_conv_fac * e0qg * int_z2)/H0 + nullhp(E, alpha, tau)
 
 
     #LOG-LIKELIHOODS
