@@ -117,7 +117,7 @@ for grb in GRBs:
 
 
     #PRIORS
-    Ebmax = 5 #keV
+    Ebmax = 5000 #keV
     Ebmin = 0
     alpha1min = -3
     alpha1max = 10
