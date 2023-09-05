@@ -73,15 +73,15 @@ for grb in GRBs:
     #LINEAR model
     def linearhp(E, logEqg, Eb, alpha1, alpha2, mu, zeta):
         
-        e0qg = (E + E0) / (10 ** logEqg)
+        e0qg = (E - E0) / (10 ** logEqg)
         
-        return - (lin_conv_fac * e0qg * int_z1)/H0 + nullhp(E, Eb, alpha1, alpha2, mu, zeta)
+        return (lin_conv_fac * e0qg * int_z1)/H0 + nullhp(E, Eb, alpha1, alpha2, mu, zeta)
 
     #QUADRATIC model
     def quadhp(E, logEqg, Eb, alpha1, alpha2, mu, zeta):
-        e0qg = (E**2 + E0 **2) / ((10 ** logEqg)**2)
+        e0qg = (E**2 - E0 **2) / ((10 ** logEqg)**2)
         
-        return -1.5 * (quad_conv_fac * e0qg * int_z2)/H0 + nullhp(E, Eb, alpha1, alpha2, mu, zeta)
+        return 1.5 * (quad_conv_fac * e0qg * int_z2)/H0 + nullhp(E, Eb, alpha1, alpha2, mu, zeta)
 
 
     #LOG-LIKELIHOODS
