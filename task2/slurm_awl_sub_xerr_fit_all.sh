@@ -1,0 +1,3 @@
+sbatch task2c_awl_sub_xerr1.sh
+sbatch task2c_awl_sub_xerr2.sh
+sbatch task2c_awl_sub_xerr3.sh
