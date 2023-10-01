@@ -1,3 +1,5 @@
+#!/usr/bin/sh
+
 cd ./task1/
 chmod +x slurm_liu_sub_xerr_fit_all.sh
 sbatch slurm_liu_sub_xerr_fit_all.sh
