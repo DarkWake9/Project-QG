@@ -1,3 +1,3 @@
-sbatch task1c_liu_sub_xerr1.sh
-sbatch task1c_liu_sub_xerr2.sh
-sbatch task1c_liu_sub_xerr3.sh
+sbatch liu_sub_xerr_fit.sh
+sbatch liu_sub_xerr_fit.sh
+sbatch liu_sub_xerr_fit.sh
