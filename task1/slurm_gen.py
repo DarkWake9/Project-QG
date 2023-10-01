@@ -21,6 +21,6 @@ for i in range(1, 4):
     f.write('\npython ' + filenames) 
     f.close()
     print('sbatch ' + filenames)
-    g.write('sbatch ' + jobtitle + '.sh\n')
+    g.write('sbatch ' + jobtitle + str(i) + '.sh\n')
     
 g.close()
