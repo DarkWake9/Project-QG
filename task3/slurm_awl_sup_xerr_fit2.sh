@@ -4,6 +4,7 @@
 #SBATCH --job-name=awl_sup_xerr_fit2
 #SBATCH --output=awl_sup_xerr_fit2.out
 #SBATCH --error=awl_sup_xerr_fit2.err
+#SBATCH --nodes=1
 #SBATCH --time=3-23:59:59
 #SBATCH --mail-user=vibhavasu2018@gmail.com
 #SBATCH --mail-type=ALL

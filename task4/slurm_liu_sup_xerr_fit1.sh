@@ -4,6 +4,7 @@
 #SBATCH --job-name=liu_sup_xerr_fit1
 #SBATCH --output=liu_sup_xerr_fit1.out
 #SBATCH --error=liu_sup_xerr_fit1.err
+#SBATCH --nodes=1
 #SBATCH --time=3-23:59:59
 #SBATCH --mail-user=vibhavasu2018@gmail.com
 #SBATCH --mail-type=ALL

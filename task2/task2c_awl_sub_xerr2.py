@@ -265,7 +265,7 @@ for grb in GRBs:
     print('Bayes factor for linear LIV model: ', results1.logz[-1], '+/-', results1.logzerr[-1])
     print('Bayes factor for quadratic LIV model: ', results2.logz[-1], '+/-', results2.logzerr[-1])
 
-    with open('outputs/BF_xerr/' + grb + '_results.txt', 'w') as f:
+    with open('./outputs/BF_xerr/' + grb + '_results.txt', 'w') as f:
         f.write(str(results0.logz[-1]) + ',' + str(results0.logzerr[-1]) + '\n')
         f.write(str(results1.logz[-1]) + ',' + str(results1.logzerr[-1]) + '\n')
         f.write(str(results2.logz[-1]) + ',' + str(results2.logzerr[-1]) + '\n')
@@ -274,9 +274,9 @@ for grb in GRBs:
     f = []
 
 
-    dyn.utils.save_sampler(sampler0, 'outputs/sampler_saves_xerr/' + grb + '_null_sampler.pkl')
-    dyn.utils.save_sampler(sampler1, 'outputs/sampler_saves_xerr/' + grb + '_linear_sampler.pkl')
-    dyn.utils.save_sampler(sampler2, 'outputs/sampler_saves_xerr/' + grb + '_quadratic_sampler.pkl')
+    dyn.utils.save_sampler(sampler0, './outputs/sampler_saves_xerr/' + grb + '_null_sampler.pkl')
+    dyn.utils.save_sampler(sampler1, './outputs/sampler_saves_xerr/' + grb + '_linear_sampler.pkl')
+    dyn.utils.save_sampler(sampler2, './outputs/sampler_saves_xerr/' + grb + '_quadratic_sampler.pkl')
     
 
 
