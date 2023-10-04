@@ -256,7 +256,7 @@ for grb in GRBs:
     plt.ylabel('lag (s)')
     plt.title(grbname_wtht_ext)
     plt.savefig(os.getcwd() + '/outputs/fits_xerr/' + grbname_wtht_ext + '_fit_logE_xerr.png', facecolor='white')
-    plt.show()
+    # plt.show()
 
     # bayes_factor_lin = np.exp(results1.logz[-1] - results0.logz[-1])
     # bayes_factor_quad = np.exp(results2.logz[-1] - results0.logz[-1])
