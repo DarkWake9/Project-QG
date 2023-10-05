@@ -219,24 +219,27 @@ for grb in GRBs:
         results2 = sampler2.results
     except ValueError:
         err_grb.append(grb)
-        with dyn.pool.Pool(ncpu, loglike_null, prior_transform_null) as pool0:
-            sampler0 = dyn.NestedSampler(loglike_null, prior_transform_null, ndim=5, nlive = nlive, sample='rwalk', bound='multi', pool=pool0)
-            sampler0.run_nested(dlogz=0.1, print_progress=False)
-            # sampler0.save(os.getcwd() + '/outputs/sampler_saves/' + grbname_wtht_ext + '_null_sampler.dill', store_samples=True)
+        try:
+            with dyn.pool.Pool(ncpu, loglike_null, prior_transform_null) as pool0:
+                sampler0 = dyn.NestedSampler(loglike_null, prior_transform_null, ndim=5, nlive = nlive, sample='rwalk', bound='multi', pool=pool0)
+                sampler0.run_nested(dlogz=0.1, print_progress=False)
+                # sampler0.save(os.getcwd() + '/outputs/sampler_saves/' + grbname_wtht_ext + '_null_sampler.dill', store_samples=True)
 
 
-        with dyn.pool.Pool(ncpu, loglike_linear, prior_transform_linear) as pool1:
-            sampler1 = dyn.NestedSampler(loglike_linear, prior_transform_linear, ndim=6, nlive = nlive, sample='rwalk', bound='multi', pool=pool1)
-            sampler1.run_nested(dlogz=0.1, print_progress=False)
+            with dyn.pool.Pool(ncpu, loglike_linear, prior_transform_linear) as pool1:
+                sampler1 = dyn.NestedSampler(loglike_linear, prior_transform_linear, ndim=6, nlive = nlive, sample='rwalk', bound='multi', pool=pool1)
+                sampler1.run_nested(dlogz=0.1, print_progress=False)
 
 
-        with dyn.pool.Pool(ncpu, loglike_quad, prior_transform_quadratic) as pool2:
-            sampler2 = dyn.NestedSampler(loglike_quad, prior_transform_quadratic, ndim=6, nlive = nlive, sample='rwalk', bound='multi', pool=pool2)
-            sampler2.run_nested(dlogz=0.1, print_progress=False)
-        
-        results0 = sampler0.results
-        results1 = sampler1.results
-        results2 = sampler2.results
+            with dyn.pool.Pool(ncpu, loglike_quad, prior_transform_quadratic) as pool2:
+                sampler2 = dyn.NestedSampler(loglike_quad, prior_transform_quadratic, ndim=6, nlive = nlive, sample='rwalk', bound='multi', pool=pool2)
+                sampler2.run_nested(dlogz=0.1, print_progress=False)
+            
+            results0 = sampler0.results
+            results1 = sampler1.results
+            results2 = sampler2.results
+        except:
+            continue
 
     def smooth_plot(results, figname, labels=["logE_qg", "Eb(keV)", "alpha1", "alpha2", "mu", "zeta"]):
             weights = np.exp(results.logwt - results.logz[-1])
