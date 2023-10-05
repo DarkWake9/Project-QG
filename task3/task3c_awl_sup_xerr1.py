@@ -369,6 +369,5 @@ for grb in GRBs:
 with open('./outputs/err_grb1.txt', 'w') as f:
     for item in err_grb:
         f.write("%s\n" % item)
-        
-        
-exit(253)        
+
+f.close()   

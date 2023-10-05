@@ -372,4 +372,4 @@ with open('./outputs/err_grb1.txt', 'w') as f:
         f.write("%s\n" % item)
         
         
-exit(253)        
+f.close()

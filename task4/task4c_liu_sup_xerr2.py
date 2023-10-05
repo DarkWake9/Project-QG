@@ -397,7 +397,5 @@ with open('./outputs/err_grb1.txt', 'w') as f:
     for item in err_grb:
         f.write("%s\n" % item)
 
+f.close()
 
-
-
-exit(254)
