@@ -194,18 +194,18 @@ for grb in GRBs:
 
         with dyn.pool.Pool(ncpu, loglike_null, prior_transform_null) as pool0:
             sampler0 = dyn.NestedSampler(loglike_null, prior_transform_null, ndim=5, nlive = nlive, sample='rwalk', bound='multi', pool=pool0)
-            sampler0.run_nested(dlogz=0.001)
+            sampler0.run_nested(dlogz=0.01, print_progress=False)
             # sampler0.save(os.getcwd() + '/outputs/sampler_saves/' + grbname_wtht_ext + '_null_sampler.dill', store_samples=True)
 
 
         with dyn.pool.Pool(ncpu, loglike_linear, prior_transform_linear) as pool1:
             sampler1 = dyn.NestedSampler(loglike_linear, prior_transform_linear, ndim=6, nlive = nlive, sample='rwalk', bound='multi', pool=pool1)
-            sampler1.run_nested(dlogz=0.001)
+            sampler1.run_nested(dlogz=0.01, print_progress=False)
 
 
         with dyn.pool.Pool(ncpu, loglike_quad, prior_transform_quadratic) as pool2:
             sampler2 = dyn.NestedSampler(loglike_quad, prior_transform_quadratic, ndim=6, nlive = nlive, sample='rwalk', bound='multi', pool=pool2)
-            sampler2.run_nested(dlogz=0.001)
+            sampler2.run_nested(dlogz=0.01, print_progress=False)
 
 
         results0 = sampler0.results
@@ -336,7 +336,7 @@ for grb in GRBs:
         continue
         
         
-with open('./outputs/err_grb.txt', 'w') as f:
+with open('./outputs/err_grb3.txt', 'w') as f:
     for item in err_grb:
         f.write("%s\n" % item)
         
