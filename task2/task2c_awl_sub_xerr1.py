@@ -43,138 +43,145 @@ param_range_quad = [(1e-20, 1e15), (1e-20, 5000), (-3, 10), (-10, 3), (0, 3), (0
 
 err_grb = []
 for grb in GRBs:
+    
+    grbname = grb + '.txt'
+    grbname_wtht_ext = grbname.replace('.txt','')
+    grbparam = pd.read_csv('../data/GRBPARAM.csv', index_col=0)
+
+    arr = np.loadtxt('../data/asciidataof_fig1/32lag/'+grbname)
+    data = [arr[:,0], arr[:,1], arr[:,2]]
+    x = arr[:,0]
+    y = arr[:,1]
+    yerr = arr[:,2]
+    df = pd.read_csv('../data/32lag_err/' + grb + '.txt', sep='\s+', header=None, names=['E_obs', 'E_obs_err', 'lag', 'lag_err'])
+    E_err = df['E_obs_err'].values
+
+    #Properties of GRB
+    E0 = grbparam[grbname.replace('.txt','')].E0
+    E0rest = E0
+    Erest = arr[:,0]    #in keV
+    z_com = grbparam[grbname.replace('.txt','')].redshift #redshift
+    H0=67.36 #Hubble constant km -1 Mpc s -1
+    omega_m = 0.315
+    omega_l = 1 - omega_m
+
+    lin_conv_fac = 3.0856 * 10**13
+    quad_conv_fac = 3.0856 * 10**7
+
+    def nullhp(E, alpha, tau):
+        return (1 + z_com)*(tau * ((E ** alpha) - (E0 ** alpha)))
+            
+
+
+    def int_z(z_prime, n):
+        integ_fn = lambda z: (1+z)**n / np.sqrt(omega_m * (1+z)**3 + omega_l)
+        return quad( integ_fn, a=0, b=z_prime)[0]
+
+    int_z1 = np.asarray(int_z(z_com, 1))
+    int_z2 = np.asarray(int_z(z_com, 2))
+
+    #LINEAR model
+    def linearhp(E, logEqg, alpha, tau):
+        
+        e0qg = (E - E0) / (10 ** logEqg)
+        
+        return -1*(lin_conv_fac * e0qg * int_z1)/H0 + nullhp(E, alpha, tau)
+
+    #QUADRATIC model
+    def quadhp(E, logEqg, alpha, tau):
+        e0qg = (E**2 - E0 **2) / ((10 ** logEqg)**2)
+        
+        return -1.5 * (quad_conv_fac * e0qg * int_z2)/H0 + nullhp(E, alpha, tau)
+
+    
+    ### DERIVATIVES
+    
+    #NULL MODEL
+    def ddeltatdE_int(E, alpha, tau):
+        uncertainity_int = (1 + z_com)*(tau * alpha* (E ** (alpha - 1)))
+        return uncertainity_int * nullhp(E, alpha, tau)
+
+    #LINEAR MODEL
+    def ddeltatdE_LIV_lin(E, logEqg, alpha, tau):
+        de0qg = 1 / (10 ** logEqg)
+        null_err = ddeltatdE_int(E, alpha, tau)
+        
+        uncertainity_LIV = (lin_conv_fac * de0qg * int_z1)/H0
+        
+        return -uncertainity_LIV + null_err
+
+    #QUADRATIC MODEL
+    def ddeltatdE_LIV_quad(E, logEqg, alpha, tau):
+        de0qg = 2 * E / ((10 ** logEqg)**2)
+        
+        null_err = ddeltatdE_int(E, alpha, tau)
+        uncertainity_LIV = 1.5*(quad_conv_fac * de0qg * int_z2)/H0
+        
+        return -uncertainity_LIV + null_err
+    
+    
+    #LOG-LIKELIHOODS
+    def loglike_null(theta):
+        alpha, tau = theta
+        err = np.sqrt(yerr**2 + (ddeltatdE_int(x, alpha, tau) * E_err)**2)
+        
+        model = nullhp(x,  alpha, tau)
+        
+        return sum(stats.norm.logpdf(*args) for args in zip(y,model,err))
+        
+        
+
+    def loglike_linear(theta):
+        logEqg, alpha, tau = theta
+        err = np.sqrt(yerr**2 + (ddeltatdE_LIV_lin(x, logEqg, alpha, tau) * E_err)**2)
+        
+        model = linearhp(x, logEqg, alpha, tau)
+        
+        return sum(stats.norm.logpdf(*args) for args in zip(y,model,err))
+
+    def loglike_quad(theta):
+        logEqg, alpha, tau = theta
+        err = np.sqrt(yerr**2 + (ddeltatdE_LIV_quad(x, logEqg, alpha, tau) * E_err)**2)
+        
+        model = quadhp(x, logEqg, alpha, tau)
+        
+        return sum(stats.norm.logpdf(*args) for args in zip(y,model,err))
+
+
+    #PRIORS
+
+    alphamin = -2
+    alphamax = 1
+    taumin = -15
+    taumax = 10
+    logeqmin = 0
+    logeqmax = 20
+
+
+    #PRIOR DISTRIBUTIONS
+
+    def prior_transform_null(theta):
+        alpha, tau = theta
+        return [(alphamax - alphamin) * alpha + alphamin, (taumax - taumin) * tau + taumin]
+
+    def prior_transform_linear(theta):
+        logEqg, alpha, tau = theta
+        return [(logeqmax - logeqmin) * logEqg + logeqmin, (alphamax - alphamin) * alpha + alphamin, (taumax - taumin) * tau + taumin]
+
+    def prior_transform_quadratic(theta):
+        logEqg, alpha, tau = theta
+        return [(logeqmax - logeqmin) * logEqg + logeqmin, (alphamax - alphamin) * alpha + alphamin, (taumax - taumin) * tau + taumin]
+    #agarwal22:
+
+    nlive = 1024
+    sampler0 = 0
+    sampler1 = 0
+    sampler2 = 0
+    results0 = 0
+    results1 = 0
+    results2 = 0
+    
     try:
-        grbname = grb + '.txt'
-        grbname_wtht_ext = grbname.replace('.txt','')
-        grbparam = pd.read_csv('../data/GRBPARAM.csv', index_col=0)
-
-        arr = np.loadtxt('../data/asciidataof_fig1/32lag/'+grbname)
-        data = [arr[:,0], arr[:,1], arr[:,2]]
-        x = arr[:,0]
-        y = arr[:,1]
-        yerr = arr[:,2]
-        df = pd.read_csv('../data/32lag_err/' + grb + '.txt', sep='\s+', header=None, names=['E_obs', 'E_obs_err', 'lag', 'lag_err'])
-        E_err = df['E_obs_err'].values
-
-        #Properties of GRB
-        E0 = grbparam[grbname.replace('.txt','')].E0
-        E0rest = E0
-        Erest = arr[:,0]    #in keV
-        z_com = grbparam[grbname.replace('.txt','')].redshift #redshift
-        H0=67.36 #Hubble constant km -1 Mpc s -1
-        omega_m = 0.315
-        omega_l = 1 - omega_m
-
-        lin_conv_fac = 3.0856 * 10**13
-        quad_conv_fac = 3.0856 * 10**7
-
-        def nullhp(E, alpha, tau):
-            return (1 + z_com)*(tau * ((E ** alpha) - (E0 ** alpha)))
-                
-
-
-        def int_z(z_prime, n):
-            integ_fn = lambda z: (1+z)**n / np.sqrt(omega_m * (1+z)**3 + omega_l)
-            return quad( integ_fn, a=0, b=z_prime)[0]
-
-        int_z1 = np.asarray(int_z(z_com, 1))
-        int_z2 = np.asarray(int_z(z_com, 2))
-
-        #LINEAR model
-        def linearhp(E, logEqg, alpha, tau):
-            
-            e0qg = (E - E0) / (10 ** logEqg)
-            
-            return -1*(lin_conv_fac * e0qg * int_z1)/H0 + nullhp(E, alpha, tau)
-
-        #QUADRATIC model
-        def quadhp(E, logEqg, alpha, tau):
-            e0qg = (E**2 - E0 **2) / ((10 ** logEqg)**2)
-            
-            return -1.5 * (quad_conv_fac * e0qg * int_z2)/H0 + nullhp(E, alpha, tau)
-
-        
-        ### DERIVATIVES
-        
-        #NULL MODEL
-        def ddeltatdE_int(E, alpha, tau):
-            uncertainity_int = (1 + z_com)*(tau * alpha* (E ** (alpha - 1)))
-            return uncertainity_int * nullhp(E, alpha, tau)
-
-        #LINEAR MODEL
-        def ddeltatdE_LIV_lin(E, logEqg, alpha, tau):
-            de0qg = 1 / (10 ** logEqg)
-            null_err = ddeltatdE_int(E, alpha, tau)
-            
-            uncertainity_LIV = (lin_conv_fac * de0qg * int_z1)/H0
-            
-            return -uncertainity_LIV + null_err
-
-        #QUADRATIC MODEL
-        def ddeltatdE_LIV_quad(E, logEqg, alpha, tau):
-            de0qg = 2 * E / ((10 ** logEqg)**2)
-            
-            null_err = ddeltatdE_int(E, alpha, tau)
-            uncertainity_LIV = 1.5*(quad_conv_fac * de0qg * int_z2)/H0
-            
-            return -uncertainity_LIV + null_err
-        
-        
-        #LOG-LIKELIHOODS
-        def loglike_null(theta):
-            alpha, tau = theta
-            err = np.sqrt(yerr**2 + (ddeltatdE_int(x, alpha, tau) * E_err)**2)
-            
-            model = nullhp(x,  alpha, tau)
-            
-            return sum(stats.norm.logpdf(*args) for args in zip(y,model,err))
-            
-            
-
-        def loglike_linear(theta):
-            logEqg, alpha, tau = theta
-            err = np.sqrt(yerr**2 + (ddeltatdE_LIV_lin(x, logEqg, alpha, tau) * E_err)**2)
-            
-            model = linearhp(x, logEqg, alpha, tau)
-            
-            return sum(stats.norm.logpdf(*args) for args in zip(y,model,err))
-
-        def loglike_quad(theta):
-            logEqg, alpha, tau = theta
-            err = np.sqrt(yerr**2 + (ddeltatdE_LIV_quad(x, logEqg, alpha, tau) * E_err)**2)
-            
-            model = quadhp(x, logEqg, alpha, tau)
-            
-            return sum(stats.norm.logpdf(*args) for args in zip(y,model,err))
-
-
-        #PRIORS
-
-        alphamin = -2
-        alphamax = 1
-        taumin = -15
-        taumax = 10
-        logeqmin = 0
-        logeqmax = 20
-
-
-        #PRIOR DISTRIBUTIONS
-
-        def prior_transform_null(theta):
-            alpha, tau = theta
-            return [(alphamax - alphamin) * alpha + alphamin, (taumax - taumin) * tau + taumin]
-
-        def prior_transform_linear(theta):
-            logEqg, alpha, tau = theta
-            return [(logeqmax - logeqmin) * logEqg + logeqmin, (alphamax - alphamin) * alpha + alphamin, (taumax - taumin) * tau + taumin]
-
-        def prior_transform_quadratic(theta):
-            logEqg, alpha, tau = theta
-            return [(logeqmax - logeqmin) * logEqg + logeqmin, (alphamax - alphamin) * alpha + alphamin, (taumax - taumin) * tau + taumin]
-        #agarwal22:
-
-        nlive = 1024
-
         with dyn.pool.Pool(ncpu, loglike_null, prior_transform_null) as pool0:
             sampler0 = dyn.NestedSampler(loglike_null, prior_transform_null, ndim=2, nlive = nlive, sample='rwalk', bound='multi', pool=pool0)
             sampler0.run_nested(dlogz=0.01, print_progress=False)
@@ -189,6 +196,28 @@ for grb in GRBs:
         with dyn.pool.Pool(ncpu, loglike_quad, prior_transform_quadratic) as pool2:
             sampler2 = dyn.NestedSampler(loglike_quad, prior_transform_quadratic, ndim=3, nlive = nlive, sample='rwalk', bound='multi', pool=pool2)
             sampler2.run_nested(dlogz=0.01, print_progress=False)
+
+
+        results0 = sampler0.results
+        results1 = sampler1.results
+        results2 = sampler2.results
+        
+    except ValueError:
+        err_grb.append(grb)
+        with dyn.pool.Pool(ncpu, loglike_null, prior_transform_null) as pool0:
+            sampler0 = dyn.NestedSampler(loglike_null, prior_transform_null, ndim=2, nlive = nlive, sample='rwalk', bound='multi', pool=pool0)
+            sampler0.run_nested(dlogz=0.1, print_progress=False)
+            # sampler0.save(os.getcwd() + '/outputs/sampler_saves/' + grbname_wtht_ext + '_null_sampler.dill', store_samples=True)
+
+
+        with dyn.pool.Pool(ncpu, loglike_linear, prior_transform_linear) as pool1:
+            sampler1 = dyn.NestedSampler(loglike_linear, prior_transform_linear, ndim=3, nlive = nlive, sample='rwalk', bound='multi', pool=pool1)
+            sampler1.run_nested(dlogz=0.1, print_progress=False)
+
+
+        with dyn.pool.Pool(ncpu, loglike_quad, prior_transform_quadratic) as pool2:
+            sampler2 = dyn.NestedSampler(loglike_quad, prior_transform_quadratic, ndim=3, nlive = nlive, sample='rwalk', bound='multi', pool=pool2)
+            sampler2.run_nested(dlogz=0.1, print_progress=False)
 
 
         results0 = sampler0.results
@@ -348,29 +377,4 @@ with open('err_grb1.txt', 'w') as f:
         f.write("%s\n" % item)
 f.close()
 
-
-
-
-# nplot = 1000
-# E = np.linspace(min(Erest), max(Erest), nplot)
-
-# plt.figure()
-# plt.errorbar(Erest, y, yerr, fmt='o', color='black', label='data')
-# plt.plot(E, null_fit, label='Null fit')
-# plt.plot(E, liv_lin_fit,label='Linear fit', ls='-.', lw = 2.2)
-# plt.plot(E, liv_quad_fit, label='Quadratic fit')
-# plt.xscale('log')
-# # plt.yscale('log')
-# plt.ylim(min(y) - max(abs(yerr)), max(y) + max(abs(yerr)))
-# # plt.ylim(-200, 20)
-# plt.legend()
-# plt.xlabel('E (keV)')
-# plt.ylabel('lag (s)')
-# plt.title(grbname_wtht_ext)
-# # plt.savefig(os.getcwd() + '/outputs/fits/' + grbname_wtht_ext + '_fit_logE.png', facecolor='white')
-# plt.show()
-
-
-
-
-
+exit(252)
