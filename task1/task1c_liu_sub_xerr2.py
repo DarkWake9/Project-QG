@@ -106,14 +106,15 @@ for grb in GRBs:
     #ERRORS
     
     def ddeltat_dE(E, Eb, alpha1, alpha2, mu, zeta):
-        num = ((alpha1 * (mu**2 - 1) + alpha2)*(((E - E0)/Eb)**(1/mu)) + alpha1 * (mu**2))
-        den1 = ((mu**2)*(E - E0))
-        den2 = ((E - E0)/Eb) + 1
-        return nullhp(E, Eb, alpha1, alpha2, mu, zeta) * (num/(den1 * den2))
+        
+        eob = (E - E0)/Eb
+        fac = (alpha1 + ((alpha2 - alpha1)(eob**(1/mu)) / (1 + (eob**(1/mu)))))/(E - E0)
+    
+        return nullhp(E, Eb, alpha1, alpha2, mu, zeta) * fac
     
     def ddeltatdE_LIV_lin(E, logEqg, Eb, alpha1, alpha2, mu, zeta):
         de0qg = 1 / (10 ** logEqg)
-        return - (lin_conv_fac * de0qg * int_z1)/H0 + ddeltat_dE(E, Eb, alpha1, alpha2, mu, zeta)
+        return -1* (lin_conv_fac * de0qg * int_z1)/H0 + ddeltat_dE(E, Eb, alpha1, alpha2, mu, zeta)
     
     def ddeltatdE_LIV_quad(E, logEqg, Eb, alpha1, alpha2, mu, zeta):
         de0qg = 2 * E / ((10 ** logEqg)**2)
@@ -362,12 +363,12 @@ for grb in GRBs:
     
     
 
-with open('./outputs/err_grb2.txt', 'w') as f:
+with open('./outputs/err_grb1.txt', 'w') as f:
     for item in err_grb:
         f.write("%s\n" % item)
         
-f.close()
 
+f.close()
 
 
 

@@ -1,0 +1,7 @@
+The first script succeeded. The second script will be executed.
+The second script failed.
+The first script succeeded. The second script will be executed.
+The second script failed.
+The first script succeeded. The second script will be executed.
+The first script succeeded. The second script will be executed.
+The second script succeeded.
