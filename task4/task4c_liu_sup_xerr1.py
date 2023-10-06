@@ -106,7 +106,7 @@ for grb in GRBs:
     def ddeltat_dE(E, Eb, alpha1, alpha2, mu, zeta):
         
         eob = (E - E0)/Eb
-        fac = (alpha1 + ((alpha2 - alpha1)(eob**(1/mu)) / (1 + (eob**(1/mu)))))/(E - E0)
+        fac = (alpha1 + ((alpha2 - alpha1)*(eob**(1/mu)) / (1 + (eob**(1/mu)))))/(E - E0)
     
         return nullhp(E, Eb, alpha1, alpha2, mu, zeta) * fac
     
