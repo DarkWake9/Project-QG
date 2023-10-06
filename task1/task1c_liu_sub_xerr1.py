@@ -45,6 +45,7 @@ GRBs = ['GRB210619B', 'GRB210610B', 'GRB210204A', 'GRB201216C', 'GRB200829A', 'G
 
 
 err_grb = []
+np.seterr(divide='ignore', invalid='ignore', over='ignore')
 for grb in GRBs:
     
     grbname = grb + '.txt'

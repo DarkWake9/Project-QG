@@ -12,7 +12,7 @@ import dynesty as dyn
 from scipy.stats import gaussian_kde
 
 ncpu = int(mul.cpu_count())
-grbparam = pd.read_csv(os.getcwd() + '/../data/GRBPARAM.csv', index_col=0)
+grbparam = pd.read_csv('../data/GRBPARAM.csv', index_col=0)
 
 param_ranges_NULL = [(1e-20, 5000), (-3, 10), (-10, 3), (1e-20,3), (1e-20,4)]
 param_range_lin = [(1e-20, 1e20), (1e-20, 5000), (-3, 10), (-10, 3), (1e-20,3), (1e-20,4)]
@@ -22,7 +22,9 @@ param_range_quad = [(1e-20, 1e15), (1e-20, 5000), (-3, 10), (-10, 3), (1e-20,3),
 # GRBs = ['GRB210619B', 'GRB210610B', 'GRB210204A', 'GRB201216C', 'GRB200829A', 'GRB200613A', 'GRB190114C', 'GRB180720B', 'GRB180703A', 'GRB171010A', 'GRB160625B', 'GRB160509A']
 # GRBs = [ 'GRB150821A', 'GRB150514A', 'GRB150403A', 'GRB150314A', 'GRB141028A', 'GRB140508A', 'GRB140206A', 'GRB131231A', 'GRB131108A', 'GRB130925A', 'GRB130518A']
 # GRBs =[ 'GRB130427A', 'GRB120119A', 'GRB100728A', 'GRB091003A', 'GRB090926A', 'GRB090618', 'GRB090328', 'GRB081221', 'GRB080916C']
-GRBs = ['GRB160625B']
+# GRBs = ['GRB160625B']
+
+GRBs = ['GRB200829A', 'GRB190114C', 'GRB180720B', 'GRB160625B']
 np.seterr(divide='ignore', invalid='ignore', over='ignore')
 #### [markdown]
 # #### Liu et al error
@@ -107,14 +109,15 @@ for grb in GRBs:
     #ERRORS
     
     def ddeltat_dE(E, Eb, alpha1, alpha2, mu, zeta):
-        num = ((alpha1 * (mu**2 - 1) + alpha2)*(((E - E0)/Eb)**(1/mu)) + alpha1 * (mu**2))
-        den1 = ((mu**2)*(E - E0))
-        den2 = ((E - E0)/Eb) + 1
-        return nullhp(E, Eb, alpha1, alpha2, mu, zeta) * (num/(den1 * den2))
+        
+        eob = (E - E0)/Eb
+        fac = (alpha1 + ((alpha2 - alpha1)*(eob**(1/mu)) / (1 + (eob**(1/mu)))))/(E - E0)
+    
+        return nullhp(E, Eb, alpha1, alpha2, mu, zeta) * fac
     
     def ddeltatdE_LIV_lin(E, logEqg, Eb, alpha1, alpha2, mu, zeta):
         de0qg = 1 / (10 ** logEqg)
-        return - (lin_conv_fac * de0qg * int_z1)/H0 + ddeltat_dE(E, Eb, alpha1, alpha2, mu, zeta)
+        return -1 * (lin_conv_fac * de0qg * int_z1)/H0 + ddeltat_dE(E, Eb, alpha1, alpha2, mu, zeta)
     
     def ddeltatdE_LIV_quad(E, logEqg, Eb, alpha1, alpha2, mu, zeta):
         de0qg = 2 * E / ((10 ** logEqg)**2)
@@ -202,18 +205,18 @@ for grb in GRBs:
     try:
         with dyn.pool.Pool(ncpu, loglike_null, prior_transform_null) as pool0:
             sampler0 = dyn.NestedSampler(loglike_null, prior_transform_null, ndim=5, nlive = nlive, sample='rwalk', bound='multi', pool=pool0)
-            sampler0.run_nested(dlogz=0.01, print_progress=True)
+            sampler0.run_nested(dlogz=0.001, print_progress=True)
             # sampler0.save(os.getcwd() + '/outputs/sampler_saves/' + grbname_wtht_ext + '_null_sampler.dill', store_samples=True)
 
 
         with dyn.pool.Pool(ncpu, loglike_linear, prior_transform_linear) as pool1:
             sampler1 = dyn.NestedSampler(loglike_linear, prior_transform_linear, ndim=6, nlive = nlive, sample='rwalk', bound='multi', pool=pool1)
-            sampler1.run_nested(dlogz=0.01, print_progress=True)
+            sampler1.run_nested(dlogz=0.001, print_progress=True)
 
 
         with dyn.pool.Pool(ncpu, loglike_quad, prior_transform_quadratic) as pool2:
             sampler2 = dyn.NestedSampler(loglike_quad, prior_transform_quadratic, ndim=6, nlive = nlive, sample='rwalk', bound='multi', pool=pool2)
-            sampler2.run_nested(dlogz=0.01, print_progress=True)
+            sampler2.run_nested(dlogz=0.001, print_progress=True)
 
 
         results0 = sampler0.results
@@ -221,7 +224,6 @@ for grb in GRBs:
         results2 = sampler2.results
     except ValueError:
         err_grb.append(grb)
-        print('ValueError' + grb + 'for dlogz = 0.01')
         try:
             with dyn.pool.Pool(ncpu, loglike_null, prior_transform_null) as pool0:
                 sampler0 = dyn.NestedSampler(loglike_null, prior_transform_null, ndim=5, nlive = nlive, sample='rwalk', bound='multi', pool=pool0)
@@ -242,7 +244,6 @@ for grb in GRBs:
             results1 = sampler1.results
             results2 = sampler2.results
         except:
-            print('ValueError' + grb + 'for dlogz = 0.1')
             continue
 
     def smooth_plot(results, figname, labels=["logE_qg", "Eb(keV)", "alpha1", "alpha2", "mu", "zeta"]):
@@ -365,12 +366,12 @@ for grb in GRBs:
     
     
 
-with open('./outputs/err_grb3.txt', 'w') as f:
+with open('./outputs/err_grb1.txt', 'w') as f:
     for item in err_grb:
         f.write("%s\n" % item)
         
-f.close()
 
+f.close()
 
 
 

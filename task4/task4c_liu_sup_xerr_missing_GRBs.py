@@ -20,7 +20,7 @@ param_range_quad = [(1e-20, 1e15), (1e-20, 5000), (-3, 10), (-10, 3), (0, 3), (0
 
 # GRBs = ['GRB180720B', 'GRB160625B', 'GRB130427A', 'GRB120119A', 'GRB100728A', 'GRB091003A', 'GRB090926A', 'GRB090618', 'GRB090328', 'GRB081221', 'GRB080916C'] #Missed GRBs 05102023 night
 # GRBs = ['GRB160625B', 'GRB130427A'] #Missed GRBs 06102023 afternoon run 1
-GRBs = ['GRB160625B'] #Missed GRBs 06102023 afternoon run 2
+# GRBs = ['GRB160625B'] #Missed GRBs 06102023 afternoon run 2
 
 np.seterr(divide='ignore', invalid='ignore', over='ignore')
 #### [markdown]
@@ -106,10 +106,11 @@ for grb in GRBs:
     #ERRORS
     
     def ddeltat_dE(E, Eb, alpha1, alpha2, mu, zeta):
-        num = ((alpha1 * (mu**2 - 1) + alpha2)*(((E - E0)/Eb)**(1/mu)) + alpha1 * (mu**2))
-        den1 = ((mu**2)*(E - E0))
-        den2 = ((E - E0)/Eb) + 1
-        return nullhp(E, Eb, alpha1, alpha2, mu, zeta) * (num/(den1 * den2))
+        
+        eob = (E - E0)/Eb
+        fac = (alpha1 + ((alpha2 - alpha1)*(eob**(1/mu)) / (1 + (eob**(1/mu)))))/(E - E0)
+    
+        return nullhp(E, Eb, alpha1, alpha2, mu, zeta) * fac
     
     def ddeltatdE_LIV_lin(E, logEqg, Eb, alpha1, alpha2, mu, zeta):
         de0qg = 1 / (10 ** logEqg)
@@ -131,7 +132,7 @@ for grb in GRBs:
             
             return sum(stats.norm.logpdf(*args) for args in zip(y,model,err))
         
-        return -10
+        return -np.inf
 
     def loglike_linear(theta):
         logEqg, Eb, alpha1, alpha2, mu, zeta = theta
@@ -142,7 +143,7 @@ for grb in GRBs:
             
             return sum(stats.norm.logpdf(*args) for args in zip(y,model,err))
         
-        return -10
+        return -np.inf
 
     def loglike_quad(theta):
         logEqg, Eb, alpha1, alpha2, mu, zeta = theta
@@ -153,7 +154,7 @@ for grb in GRBs:
             
             return sum(stats.norm.logpdf(*args) for args in zip(y,model,err))
         
-        return -10    
+        return -np.inf    
 
 
     #PRIORS
@@ -201,18 +202,18 @@ for grb in GRBs:
     try:
         with dyn.pool.Pool(ncpu, loglike_null, prior_transform_null) as pool0:
             sampler0 = dyn.NestedSampler(loglike_null, prior_transform_null, ndim=5, nlive = nlive, sample='rwalk', bound='multi', pool=pool0)
-            sampler0.run_nested(dlogz=0.01)
+            sampler0.run_nested(dlogz=0.001, print_progress=False)
             # sampler0.save(os.getcwd() + '/outputs/sampler_saves/' + grbname_wtht_ext + '_null_sampler.dill', store_samples=True)
 
 
         with dyn.pool.Pool(ncpu, loglike_linear, prior_transform_linear) as pool1:
             sampler1 = dyn.NestedSampler(loglike_linear, prior_transform_linear, ndim=6, nlive = nlive, sample='rwalk', bound='multi', pool=pool1)
-            sampler1.run_nested(dlogz=0.01)
+            sampler1.run_nested(dlogz=0.001, print_progress=False)
 
 
         with dyn.pool.Pool(ncpu, loglike_quad, prior_transform_quadratic) as pool2:
             sampler2 = dyn.NestedSampler(loglike_quad, prior_transform_quadratic, ndim=6, nlive = nlive, sample='rwalk', bound='multi', pool=pool2)
-            sampler2.run_nested(dlogz=0.01)
+            sampler2.run_nested(dlogz=0.001, print_progress=False)
 
 
         results0 = sampler0.results
@@ -220,30 +221,29 @@ for grb in GRBs:
         results2 = sampler2.results
 
     except ValueError:
-        print('ValueError: Invalid lklhood GRB ' + grb)
         err_grb.append(grb)
         try:
             with dyn.pool.Pool(ncpu, loglike_null, prior_transform_null) as pool0:
                 sampler0 = dyn.NestedSampler(loglike_null, prior_transform_null, ndim=5, nlive = nlive, sample='rwalk', bound='multi', pool=pool0)
-                sampler0.run_nested(dlogz=0.1)
+                sampler0.run_nested(dlogz=0.1, print_progress=False)
                 # sampler0.save(os.getcwd() + '/outputs/sampler_saves/' + grbname_wtht_ext + '_null_sampler.dill', store_samples=True)
 
 
             with dyn.pool.Pool(ncpu, loglike_linear, prior_transform_linear) as pool1:
                 sampler1 = dyn.NestedSampler(loglike_linear, prior_transform_linear, ndim=6, nlive = nlive, sample='rwalk', bound='multi', pool=pool1)
-                sampler1.run_nested(dlogz=0.1)
+                sampler1.run_nested(dlogz=0.1, print_progress=False)
 
 
             with dyn.pool.Pool(ncpu, loglike_quad, prior_transform_quadratic) as pool2:
                 sampler2 = dyn.NestedSampler(loglike_quad, prior_transform_quadratic, ndim=6, nlive = nlive, sample='rwalk', bound='multi', pool=pool2)
-                sampler2.run_nested(dlogz=0.1)
+                sampler2.run_nested(dlogz=0.1, print_progress=False)
                 
             results0 = sampler0.results
             results1 = sampler1.results
             results2 = sampler2.results
-        except ValueError:
-            print('ValueError: Invalid lklhood for dlogz=0.1' + grb)
+        except:
             continue
+
 
     def smooth_plot(results, figname, labels=["logE_qg", "Eb(keV)", "alpha1", "alpha2", "mu", "zeta"]):
             weights = np.exp(results.logwt - results.logz[-1])

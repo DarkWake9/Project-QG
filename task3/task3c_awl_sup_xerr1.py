@@ -40,6 +40,7 @@ param_range_quad = [(1e-20, 1e15), (1e-20, 5000), (-3, 10), (-10, 3), (0, 3), (0
 # 
 
 err_grb = []
+np.seterr(divide='ignore', invalid='ignore', over='ignore')
 for grb in GRBs:
     
     grbname = grb + '.txt'
