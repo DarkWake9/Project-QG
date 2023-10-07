@@ -228,151 +228,151 @@ for grb in GRBs:
         results2 = sampler2.results
 
 
-        def smooth_plot(results, figname, labels=["logE_qg", 'alpha', 'tau']):
-                weights = np.exp(results.logwt - results.logz[-1])
-                samples = dyn.utils.resample_equal(  results.samples, weights)
+    def smooth_plot(results, figname, labels=["logE_qg", 'alpha', 'tau']):
+            weights = np.exp(results.logwt - results.logz[-1])
+            samples = dyn.utils.resample_equal(  results.samples, weights)
+            
+            fig = corner(samples, weights=weights, labels=labels, levels=[0.68, 0.9], show_titles=True, title_kwargs={"fontsize": 12}, hist_kwargs={'density': True})
+            ndim =samples.shape[1]
+            for axidx, samps in zip([i*(ndim+1) for i in range(ndim)],samples.T):
+                kde = gaussian_kde(samps)
+                xvals = fig.axes[axidx].get_xlim()
+                xvals = np.linspace(xvals[0], xvals[1], 100)
+                fig.axes[axidx].plot(xvals, kde(xvals), color='firebrick')
                 
-                fig = corner(samples, weights=weights, labels=labels, levels=[0.68, 0.9], show_titles=True, title_kwargs={"fontsize": 12}, hist_kwargs={'density': True})
-                ndim =samples.shape[1]
-                for axidx, samps in zip([i*(ndim+1) for i in range(ndim)],samples.T):
-                    kde = gaussian_kde(samps)
-                    xvals = fig.axes[axidx].get_xlim()
-                    xvals = np.linspace(xvals[0], xvals[1], 100)
-                    fig.axes[axidx].plot(xvals, kde(xvals), color='firebrick')
-                    
-                # plt.title(str(grb) + '\n\n')
-                plt.suptitle(str(grb) + '\n\n', x=0.75, y=0.75)
-                plt.savefig(os.getcwd() + '/outputs/contours_xerr/' + grb + '_' + figname + '_xerr.png')
+            # plt.title(str(grb) + '\n\n')
+            plt.suptitle(str(grb) + '\n\n', x=0.75, y=0.75)
+            plt.savefig(os.getcwd() + '/outputs/contours_xerr/' + grb + '_' + figname + '_xerr.png')
 
 
-        smooth_plot(results0, 'nullhp', labels=["alpha", 'tau'])
+    smooth_plot(results0, 'nullhp', labels=["alpha", 'tau'])
 
 
-        smooth_plot(results1, 'linearhp')
+    smooth_plot(results1, 'linearhp')
 
 
-        smooth_plot(results2, 'quadhp')
+    smooth_plot(results2, 'quadhp')
 
 
-        #PLOTTING FITS
+    #PLOTTING FITS
 
-        nplot = 1000
-        E = np.linspace(min(Erest), max(Erest), nplot)
-        samples0 = dyn.utils.resample_equal( results0.samples, np.exp(results0.logwt - results0.logz[-1]))
-        # samples0 = np.median(samples0, axis=0)
-        samples0 = samples0[np.argmax(results0.logl)]
+    nplot = 1000
+    E = np.linspace(min(Erest), max(Erest), nplot)
+    samples0 = dyn.utils.resample_equal( results0.samples, np.exp(results0.logwt - results0.logz[-1]))
+    # samples0 = np.median(samples0, axis=0)
+    samples0 = samples0[np.argmax(results0.logl)]
 
-        samples1 = dyn.utils.resample_equal( results1.samples, np.exp(results1.logwt - results1.logz[-1]))
-        # samples1 = np.median(samples1, axis=0)
-        samples1 = samples1[np.argmax(results1.logl)]
+    samples1 = dyn.utils.resample_equal( results1.samples, np.exp(results1.logwt - results1.logz[-1]))
+    # samples1 = np.median(samples1, axis=0)
+    samples1 = samples1[np.argmax(results1.logl)]
 
-        samples2 = dyn.utils.resample_equal( results2.samples, np.exp(results2.logwt - results2.logz[-1]))
-        # samples2 = np.median(samples2, axis=0)
-        samples2 = samples2[np.argmax(results2.logl)]
-        null_fit = [nullhp(E[i], samples0[0], samples0[1]) for i in range(nplot)]
-        liv_lin_fit = [linearhp(E[i], samples1[0], samples1[1], samples1[2]) for i in range(nplot)]
-        liv_quad_fit = [quadhp(E[i], samples2[0], samples2[1], samples2[2]) for i in range(nplot)]
+    samples2 = dyn.utils.resample_equal( results2.samples, np.exp(results2.logwt - results2.logz[-1]))
+    # samples2 = np.median(samples2, axis=0)
+    samples2 = samples2[np.argmax(results2.logl)]
+    null_fit = [nullhp(E[i], samples0[0], samples0[1]) for i in range(nplot)]
+    liv_lin_fit = [linearhp(E[i], samples1[0], samples1[1], samples1[2]) for i in range(nplot)]
+    liv_quad_fit = [quadhp(E[i], samples2[0], samples2[1], samples2[2]) for i in range(nplot)]
 
-        plt.figure()
-        plt.errorbar(x, y, yerr, fmt='o', color='black', label='data')
-        plt.plot(E, null_fit, label='Null fit')
-        plt.plot(E, liv_lin_fit,label='Linear fit')
-        plt.plot(E, liv_quad_fit, label='Quadratic fit')
-        plt.xscale('log')
-        # plt.yscale('log')
-        plt.ylim(min(y) - max(abs(yerr)), max(y) + max(abs(yerr)))
-        # plt.ylim(-200, 20)
-        plt.legend()
-        plt.xlabel('E (keV)')
-        plt.ylabel('lag (s)')
-        plt.title(grbname_wtht_ext)
-        plt.savefig(os.getcwd() + '/outputs/fits_xerr/' + grbname_wtht_ext + '_fit_logE_xerr.png', facecolor='white')
-        # plt.show()
+    plt.figure()
+    plt.errorbar(x, y, yerr, fmt='o', color='black', label='data')
+    plt.plot(E, null_fit, label='Null fit')
+    plt.plot(E, liv_lin_fit,label='Linear fit')
+    plt.plot(E, liv_quad_fit, label='Quadratic fit')
+    plt.xscale('log')
+    # plt.yscale('log')
+    plt.ylim(min(y) - max(abs(yerr)), max(y) + max(abs(yerr)))
+    # plt.ylim(-200, 20)
+    plt.legend()
+    plt.xlabel('E (keV)')
+    plt.ylabel('lag (s)')
+    plt.title(grbname_wtht_ext)
+    plt.savefig(os.getcwd() + '/outputs/fits_xerr/' + grbname_wtht_ext + '_fit_logE_xerr.png', facecolor='white')
+    # plt.show()
 
-        # bayes_factor_lin = np.exp(results1.logz[-1] - results0.logz[-1])
-        # bayes_factor_quad = np.exp(results2.logz[-1] - results0.logz[-1])
+    # bayes_factor_lin = np.exp(results1.logz[-1] - results0.logz[-1])
+    # bayes_factor_quad = np.exp(results2.logz[-1] - results0.logz[-1])
 
-        print('Bayes factor for null model: ', results0.logz[-1], '+/-', results0.logzerr[-1])
-        print('Bayes factor for linear LIV model: ', results1.logz[-1], '+/-', results1.logzerr[-1])
-        print('Bayes factor for quadratic LIV model: ', results2.logz[-1], '+/-', results2.logzerr[-1])
+    print('Bayes factor for null model: ', results0.logz[-1], '+/-', results0.logzerr[-1])
+    print('Bayes factor for linear LIV model: ', results1.logz[-1], '+/-', results1.logzerr[-1])
+    print('Bayes factor for quadratic LIV model: ', results2.logz[-1], '+/-', results2.logzerr[-1])
 
-        with open('./outputs/BF_xerr/' + grb + '_results.txt', 'w') as f:
-            f.write(str(results0.logz[-1]) + ',' + str(results0.logzerr[-1]) + '\n')
-            f.write(str(results1.logz[-1]) + ',' + str(results1.logzerr[-1]) + '\n')
-            f.write(str(results2.logz[-1]) + ',' + str(results2.logzerr[-1]) + '\n')
-            
-        f.close()
-        f = []
-
-
-        dyn.utils.save_sampler(sampler0, './outputs/sampler_saves_xerr/' + grb + '_null_sampler.pkl')
-        dyn.utils.save_sampler(sampler1, './outputs/sampler_saves_xerr/' + grb + '_linear_sampler.pkl')
-        dyn.utils.save_sampler(sampler2, './outputs/sampler_saves_xerr/' + grb + '_quadratic_sampler.pkl')
+    with open('./outputs/BF_xerr/' + grb + '_results.txt', 'w') as f:
+        f.write(str(results0.logz[-1]) + ',' + str(results0.logzerr[-1]) + '\n')
+        f.write(str(results1.logz[-1]) + ',' + str(results1.logzerr[-1]) + '\n')
+        f.write(str(results2.logz[-1]) + ',' + str(results2.logzerr[-1]) + '\n')
         
+    f.close()
+    f = []
 
 
-        def chi2_all_hypo(E, E_err, y, yerr, n, alpha, tau, logEqg = 0):
-            
-            if n == 0:
-                err = np.sqrt(yerr**2 + (ddeltatdE_int(E, alpha, tau) * E_err)**2)
-                return np.sum(((y - nullhp(E, alpha, tau))/err)**2)/(len(y) - 2)
-            
-            elif n == 1:
-                err = np.sqrt(yerr**2 + (ddeltatdE_LIV_lin(E, logEqg, alpha, tau) * E_err)**2)
-            
-                return np.sum(((y - linearhp(E, logEqg, alpha, tau))/err)**2)/(len(y) - 3)
-            
-            elif n == 2:
-                err = np.sqrt(yerr**2 + (ddeltatdE_LIV_quad(E, logEqg, alpha, tau) * E_err)**2)
-                
-                return np.sum(((y - quadhp(E, logEqg, alpha, tau))/err)**2)/(len(y) - 3)    
-        #Properties of GRB
-        E0 = grbparam[grbname.replace('.txt','')].E0
-        E0rest = E0
-        Erest = arr[:,0]    #in keV
-        z_com = grbparam[grbname.replace('.txt','')].redshift #redshift
-        threesamplers = ['_null_sampler.pkl', '_linear_sampler.pkl', '_quadratic_sampler.pkl']
-        sampler0 = dyn.utils.restore_sampler('./outputs/sampler_saves_xerr/' + grb + threesamplers[0])
-        sampler1 = dyn.utils.restore_sampler('./outputs/sampler_saves_xerr/' + grb + threesamplers[1])
-        sampler2 = dyn.utils.restore_sampler('./outputs/sampler_saves_xerr/' + grb + threesamplers[2])
-        results0 = sampler0.results
-        results1 = sampler1.results
-        results2 = sampler2.results
+    dyn.utils.save_sampler(sampler0, './outputs/sampler_saves_xerr/' + grb + '_null_sampler.pkl')
+    dyn.utils.save_sampler(sampler1, './outputs/sampler_saves_xerr/' + grb + '_linear_sampler.pkl')
+    dyn.utils.save_sampler(sampler2, './outputs/sampler_saves_xerr/' + grb + '_quadratic_sampler.pkl')
+    
 
-        nplot = 1000
-        E = np.linspace(min(Erest), max(Erest), nplot)
-        samples0 = dyn.utils.resample_equal( results0.samples, np.exp(results0.logwt - results0.logz[-1]))
-        # samples0 = np.median(samples0, axis=0)
-        samples0 = samples0[np.argmax(results0.logl)]
 
-        samples1 = dyn.utils.resample_equal( results1.samples, np.exp(results1.logwt - results1.logz[-1]))
-        # samples1 = np.median(samples1, axis=0)
-        samples1 = samples1[np.argmax(results1.logl)]
-
-        samples2 = dyn.utils.resample_equal( results2.samples, np.exp(results2.logwt - results2.logz[-1]))
-        # samples2 = np.median(samples2, axis=0)
-        samples2 = samples2[np.argmax(results2.logl)]
-        null_fit = [nullhp(E[i], samples0[0], samples0[1]) for i in range(nplot)]
-        liv_lin_fit = [linearhp(E[i], samples1[0], samples1[1], samples1[2]) for i in range(nplot)]
-        liv_quad_fit = [quadhp(E[i], samples2[0], samples2[1], samples2[2]) for i in range(nplot)]
-        samples0
-        gof_null = chi2_all_hypo(Erest, E_err, y, yerr, 0, samples0[0], samples0[1])
-        gof_lin = chi2_all_hypo(Erest, E_err, y, yerr, 1, samples1[1], samples1[2], samples1[0])
-        gof_quad = chi2_all_hypo(Erest, E_err, y, yerr, 2, samples2[1], samples2[2], samples2[0])
-        print(grb, gof_null, gof_lin, gof_quad)
+    def chi2_all_hypo(E, E_err, y, yerr, n, alpha, tau, logEqg = 0):
         
-        with open('./outputs/GOF_xerr/' + grb + '_gof.txt', 'w') as f:
-            f.write(str(gof_null) + '\n')
-            f.write(str(gof_lin) + '\n')
-            f.write(str(gof_quad) + '\n')
-            
-            
+        if n == 0:
+            err = np.sqrt(yerr**2 + (ddeltatdE_int(E, alpha, tau) * E_err)**2)
+            return np.sum(((y - nullhp(E, alpha, tau))/err)**2)/(len(y) - 2)
         
-        f.close()
+        elif n == 1:
+            err = np.sqrt(yerr**2 + (ddeltatdE_LIV_lin(E, logEqg, alpha, tau) * E_err)**2)
+        
+            return np.sum(((y - linearhp(E, logEqg, alpha, tau))/err)**2)/(len(y) - 3)
+        
+        elif n == 2:
+            err = np.sqrt(yerr**2 + (ddeltatdE_LIV_quad(E, logEqg, alpha, tau) * E_err)**2)
+            
+            return np.sum(((y - quadhp(E, logEqg, alpha, tau))/err)**2)/(len(y) - 3)    
+    #Properties of GRB
+    E0 = grbparam[grbname.replace('.txt','')].E0
+    E0rest = E0
+    Erest = arr[:,0]    #in keV
+    z_com = grbparam[grbname.replace('.txt','')].redshift #redshift
+    threesamplers = ['_null_sampler.pkl', '_linear_sampler.pkl', '_quadratic_sampler.pkl']
+    sampler0 = dyn.utils.restore_sampler('./outputs/sampler_saves_xerr/' + grb + threesamplers[0])
+    sampler1 = dyn.utils.restore_sampler('./outputs/sampler_saves_xerr/' + grb + threesamplers[1])
+    sampler2 = dyn.utils.restore_sampler('./outputs/sampler_saves_xerr/' + grb + threesamplers[2])
+    results0 = sampler0.results
+    results1 = sampler1.results
+    results2 = sampler2.results
 
-    except:
-        err_grb.append(grb)
-        continue
+    nplot = 1000
+    E = np.linspace(min(Erest), max(Erest), nplot)
+    samples0 = dyn.utils.resample_equal( results0.samples, np.exp(results0.logwt - results0.logz[-1]))
+    # samples0 = np.median(samples0, axis=0)
+    samples0 = samples0[np.argmax(results0.logl)]
+
+    samples1 = dyn.utils.resample_equal( results1.samples, np.exp(results1.logwt - results1.logz[-1]))
+    # samples1 = np.median(samples1, axis=0)
+    samples1 = samples1[np.argmax(results1.logl)]
+
+    samples2 = dyn.utils.resample_equal( results2.samples, np.exp(results2.logwt - results2.logz[-1]))
+    # samples2 = np.median(samples2, axis=0)
+    samples2 = samples2[np.argmax(results2.logl)]
+    null_fit = [nullhp(E[i], samples0[0], samples0[1]) for i in range(nplot)]
+    liv_lin_fit = [linearhp(E[i], samples1[0], samples1[1], samples1[2]) for i in range(nplot)]
+    liv_quad_fit = [quadhp(E[i], samples2[0], samples2[1], samples2[2]) for i in range(nplot)]
+    samples0
+    gof_null = chi2_all_hypo(Erest, E_err, y, yerr, 0, samples0[0], samples0[1])
+    gof_lin = chi2_all_hypo(Erest, E_err, y, yerr, 1, samples1[1], samples1[2], samples1[0])
+    gof_quad = chi2_all_hypo(Erest, E_err, y, yerr, 2, samples2[1], samples2[2], samples2[0])
+    print(grb, gof_null, gof_lin, gof_quad)
+    
+    with open('./outputs/GOF_xerr/' + grb + '_gof.txt', 'w') as f:
+        f.write(str(gof_null) + '\n')
+        f.write(str(gof_lin) + '\n')
+        f.write(str(gof_quad) + '\n')
+        
+        
+    
+    f.close()
+
+    # except:
+    #     err_grb.append(grb)
+    #     continue
     
     
 with open('err_grb1.txt', 'w') as f:
