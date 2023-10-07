@@ -258,6 +258,7 @@ for grb in GRBs:
                 
             plt.suptitle(str(grb))
             plt.savefig('./outputs/contours_xerr/' + grb + '_' + figname + '_xerr.png')
+            plt.close()
             # plt.show()
 
 

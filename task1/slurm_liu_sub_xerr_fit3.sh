@@ -13,4 +13,5 @@
 cd /scratch/vibhavasu.phy.iith/Project-QG/task1
 ## module load conda
 conda activate vibenv
+ulimit -n 4096
 python task1c_liu_sub_xerr3.py

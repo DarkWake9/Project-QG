@@ -16,7 +16,7 @@ for i in range(1, 4):
     f.write('\n#SBATCH --error=' + jobtitle + str(i) + '.err')
     f.write('\n#SBATCH --nodes=1\n#SBATCH --ntasks-per-node=48\n#SBATCH --time=3-23:59:59\n#SBATCH --mail-user=vibhavasu2018@gmail.com\n#SBATCH --mail-type=ALL\n## module load python')
     
-    f.write('\ncd /scratch/vibhavasu.phy.iith/Project-QG/'+task+'\n## module load conda\nconda activate vibenv')
+    f.write('\ncd /scratch/vibhavasu.phy.iith/Project-QG/'+task+'\n## module load conda\nconda activate vibenv\nulimit -n 4096')
     
     f.write('\npython ' + filenames) 
     f.close()

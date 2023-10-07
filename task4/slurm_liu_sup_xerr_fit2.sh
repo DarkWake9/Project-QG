@@ -13,8 +13,5 @@
 cd /scratch/vibhavasu.phy.iith/Project-QG/task4
 ## module load conda
 conda activate vibenv
+ulimit -n 4096
 python task4c_liu_sup_xerr2.py
-
-exit_code=$?
-
-exit $exit_code
