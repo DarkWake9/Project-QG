@@ -21,7 +21,7 @@ param_range_quad = [(1e-20, 1e15), (1e-20, 5000), (-3, 10), (-10, 3), (0, 3), (0
 # GRBs = ['GRB180720B', 'GRB160625B', 'GRB130427A', 'GRB120119A', 'GRB100728A', 'GRB091003A', 'GRB090926A', 'GRB090618', 'GRB090328', 'GRB081221', 'GRB080916C'] #Missed GRBs 05102023 night
 # GRBs = ['GRB160625B', 'GRB130427A'] #Missed GRBs 06102023 afternoon run 1
 # GRBs = ['GRB160625B'] #Missed GRBs 06102023 afternoon run 2
-
+GRBs = ['GRB130427A','GRB120119A','GRB100728A','GRB091003A','GRB090926A','GRB090618','GRB090328','GRB081221','GRB080916C'] #Missed GRBs 07102023 morning run 3
 np.seterr(divide='ignore', invalid='ignore', over='ignore')
 #### [markdown]
 # #### Liu et al error
@@ -202,18 +202,18 @@ for grb in GRBs:
     try:
         with dyn.pool.Pool(ncpu, loglike_null, prior_transform_null) as pool0:
             sampler0 = dyn.NestedSampler(loglike_null, prior_transform_null, ndim=5, nlive = nlive, sample='rwalk', bound='multi', pool=pool0)
-            sampler0.run_nested(dlogz=0.001, print_progress=False)
+            sampler0.run_nested(dlogz=0.01, print_progress=True)
             # sampler0.save(os.getcwd() + '/outputs/sampler_saves/' + grbname_wtht_ext + '_null_sampler.dill', store_samples=True)
 
 
         with dyn.pool.Pool(ncpu, loglike_linear, prior_transform_linear) as pool1:
             sampler1 = dyn.NestedSampler(loglike_linear, prior_transform_linear, ndim=6, nlive = nlive, sample='rwalk', bound='multi', pool=pool1)
-            sampler1.run_nested(dlogz=0.001, print_progress=False)
+            sampler1.run_nested(dlogz=0.01, print_progress=True)
 
 
         with dyn.pool.Pool(ncpu, loglike_quad, prior_transform_quadratic) as pool2:
             sampler2 = dyn.NestedSampler(loglike_quad, prior_transform_quadratic, ndim=6, nlive = nlive, sample='rwalk', bound='multi', pool=pool2)
-            sampler2.run_nested(dlogz=0.001, print_progress=False)
+            sampler2.run_nested(dlogz=0.01, print_progress=True)
 
 
         results0 = sampler0.results
@@ -225,23 +225,24 @@ for grb in GRBs:
         try:
             with dyn.pool.Pool(ncpu, loglike_null, prior_transform_null) as pool0:
                 sampler0 = dyn.NestedSampler(loglike_null, prior_transform_null, ndim=5, nlive = nlive, sample='rwalk', bound='multi', pool=pool0)
-                sampler0.run_nested(dlogz=0.1, print_progress=False)
+                sampler0.run_nested(dlogz=0.1, print_progress=True)
                 # sampler0.save(os.getcwd() + '/outputs/sampler_saves/' + grbname_wtht_ext + '_null_sampler.dill', store_samples=True)
 
 
             with dyn.pool.Pool(ncpu, loglike_linear, prior_transform_linear) as pool1:
                 sampler1 = dyn.NestedSampler(loglike_linear, prior_transform_linear, ndim=6, nlive = nlive, sample='rwalk', bound='multi', pool=pool1)
-                sampler1.run_nested(dlogz=0.1, print_progress=False)
+                sampler1.run_nested(dlogz=0.1, print_progress=True)
 
 
             with dyn.pool.Pool(ncpu, loglike_quad, prior_transform_quadratic) as pool2:
                 sampler2 = dyn.NestedSampler(loglike_quad, prior_transform_quadratic, ndim=6, nlive = nlive, sample='rwalk', bound='multi', pool=pool2)
-                sampler2.run_nested(dlogz=0.1, print_progress=False)
+                sampler2.run_nested(dlogz=0.1, print_progress=True)
                 
             results0 = sampler0.results
             results1 = sampler1.results
             results2 = sampler2.results
         except:
+            print('Error in ' + grb)
             continue
 
 

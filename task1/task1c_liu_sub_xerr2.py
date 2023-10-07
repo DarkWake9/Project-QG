@@ -108,14 +108,14 @@ for grb in GRBs:
     
     def ddeltat_dE(E, Eb, alpha1, alpha2, mu, zeta):
         
-        eob = (E - E0)/Eb
-        fac = (alpha1 + ((alpha2 - alpha1)*(eob**(1/mu)) / (1 + (eob**(1/mu)))))/(E - E0)
+        eobmu = ((E - E0)/Eb)**(1/mu)
+        fac = (alpha1 + ( (alpha2 - alpha1) / (1 + 1/eobmu) ) )/(E - E0)
     
         return nullhp(E, Eb, alpha1, alpha2, mu, zeta) * fac
     
     def ddeltatdE_LIV_lin(E, logEqg, Eb, alpha1, alpha2, mu, zeta):
         de0qg = 1 / (10 ** logEqg)
-        return -1* (lin_conv_fac * de0qg * int_z1)/H0 + ddeltat_dE(E, Eb, alpha1, alpha2, mu, zeta)
+        return -1 * (lin_conv_fac * de0qg * int_z1)/H0 + ddeltat_dE(E, Eb, alpha1, alpha2, mu, zeta)
     
     def ddeltatdE_LIV_quad(E, logEqg, Eb, alpha1, alpha2, mu, zeta):
         de0qg = 2 * E / ((10 ** logEqg)**2)
@@ -271,8 +271,6 @@ for grb in GRBs:
     smooth_plot(results2, 'quadhp', labels=["logE_qg", "Eb(keV)", "alpha1", "alpha2", "mu", "zeta"])
 
 
-    results0.samples[np.argmax(results0.logl)]
-
 
 
 
@@ -283,21 +281,21 @@ for grb in GRBs:
     E = np.linspace(min(Erest), max(Erest), nplot)
     samples0 = dyn.utils.resample_equal( results0.samples, np.exp(results0.logwt - results0.logz[-1]))
     # samples0 = np.median(samples0, axis=0)
-    samples0 = samples0[np.argmax(results0.logl)]
+    samples0 = samples0[np.nanargmax(results0.logl)]
 
     samples1 = dyn.utils.resample_equal( results1.samples, np.exp(results1.logwt - results1.logz[-1]))
     # samples1 = np.median(samples1, axis=0)
-    samples1 = samples1[np.argmax(results1.logl)]
+    samples1 = samples1[np.nanargmax(results1.logl)]
 
     samples2 = dyn.utils.resample_equal( results2.samples, np.exp(results2.logwt - results2.logz[-1]))
     # samples2 = np.median(samples2, axis=0)
-    samples2 = samples2[np.argmax(results2.logl)]
+    samples2 = samples2[np.nanargmax(results2.logl)]
     null_fit = [nullhp(E[i], samples0[0], samples0[1], samples0[2], samples0[3], samples0[4]) for i in range(nplot)]
     liv_lin_fit = [linearhp(E[i], samples1[0], samples1[1], samples1[2], samples1[3], samples1[4], samples1[5]) for i in range(nplot)]
     liv_quad_fit = [quadhp(E[i], samples2[0], samples2[1], samples2[2], samples2[3], samples2[4], samples2[5]) for i in range(nplot)]
 
     plt.figure()
-    plt.errorbar(Erest, y, yerr, fmt='o', color='black', label='data')
+    plt.errorbar(Erest, y, xerr=E_err, yerr=yerr, fmt='o', color='black', label='data')
     plt.plot(E, null_fit, label='Null fit')
     plt.plot(E, liv_lin_fit,label='Linear fit')
     plt.plot(E, liv_quad_fit, label='Quadratic fit')
@@ -350,9 +348,9 @@ for grb in GRBs:
             return np.sum(((y - fit_func(x, *fit_func_args))/err)**2)/(len(y) - len(fit_func_args))
 
 
-    gof_null = chi2_gof(Erest, y, yerr, nullhp, samples0[0], samples0[1], samples0[2], samples0[3], samples0[4])
-    gof_lin = chi2_gof(Erest, y, yerr, linearhp, samples1[0], samples1[1], samples1[2], samples1[3], samples1[4], samples1[5])
-    gof_quad = chi2_gof(Erest, y, yerr, quadhp, samples2[0], samples2[1], samples2[2], samples2[3], samples2[4], samples2[5])
+    gof_null = chi2_gof(Erest, y, yerr, 0, samples0[0], samples0[1], samples0[2], samples0[3], samples0[4])
+    gof_lin = chi2_gof(Erest, y, yerr, 1, samples1[0], samples1[1], samples1[2], samples1[3], samples1[4], samples1[5])
+    gof_quad = chi2_gof(Erest, y, yerr, 2, samples2[0], samples2[1], samples2[2], samples2[3], samples2[4], samples2[5])
 
 
     with open('./outputs/GOF_xerr/' + grb + '_GOF.txt', 'w') as f:
@@ -365,12 +363,9 @@ for grb in GRBs:
     
     
 
-with open('./outputs/err_grb1.txt', 'w') as f:
+with open('./outputs/err_grb2.txt', 'w') as f:
     for item in err_grb:
         f.write("%s\n" % item)
         
 
 f.close()
-
-
-

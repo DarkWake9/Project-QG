@@ -24,7 +24,8 @@ param_range_quad = [(1e-20, 1e15), (1e-20, 5000), (-3, 10), (-10, 3), (1e-20,3),
 # GRBs =[ 'GRB130427A', 'GRB120119A', 'GRB100728A', 'GRB091003A', 'GRB090926A', 'GRB090618', 'GRB090328', 'GRB081221', 'GRB080916C']
 # GRBs = ['GRB160625B']
 
-GRBs = ['GRB200829A', 'GRB190114C', 'GRB180720B', 'GRB160625B']
+# GRBs = ['GRB200829A', 'GRB190114C', 'GRB180720B', 'GRB160625B'] #missing GRBs 06102023 night
+GRBs = ['GRB210619B','GRB180720B','GRB180703A','GRB160625B']
 np.seterr(divide='ignore', invalid='ignore', over='ignore')
 #### [markdown]
 # #### Liu et al error
@@ -82,7 +83,7 @@ for grb in GRBs:
         
         eob = (E - E0) / (Eb)
         
-        return zeta * (eob**alpha1) * ((0.5 * ((1 + eob)**(1/mu))) ** ((alpha2 - alpha1) * mu))
+        return zeta * np.nan_to_num(eob**alpha1) * np.nan_to_num((0.5 * np.nan_to_num((1 + eob)**(1/mu))) ** ((alpha2 - alpha1) * mu))
 
 
     def int_z(z_prime, n):
@@ -110,8 +111,8 @@ for grb in GRBs:
     
     def ddeltat_dE(E, Eb, alpha1, alpha2, mu, zeta):
         
-        eob = (E - E0)/Eb
-        fac = (alpha1 + ((alpha2 - alpha1)*(eob**(1/mu)) / (1 + (eob**(1/mu)))))/(E - E0)
+        eobmu = ((E - E0)/Eb)**(1/mu)
+        fac = (alpha1 + ( (alpha2 - alpha1) / (1 + 1/eobmu) ) )/(E - E0)
     
         return nullhp(E, Eb, alpha1, alpha2, mu, zeta) * fac
     
@@ -350,12 +351,12 @@ for grb in GRBs:
             fit_func = quadhp
             return np.sum(((y - fit_func(x, *fit_func_args))/err)**2)/(len(y) - len(fit_func_args))
 
+    
+    gof_null = chi2_gof(Erest, y, yerr, 0, samples0[0], samples0[1], samples0[2], samples0[3], samples0[4])
+    gof_lin = chi2_gof(Erest, y, yerr, 1, samples1[0], samples1[1], samples1[2], samples1[3], samples1[4], samples1[5])
+    gof_quad = chi2_gof(Erest, y, yerr, 2, samples2[0], samples2[1], samples2[2], samples2[3], samples2[4], samples2[5])
 
-    gof_null = chi2_gof(Erest, y, yerr, nullhp, samples0[0], samples0[1], samples0[2], samples0[3], samples0[4])
-    gof_lin = chi2_gof(Erest, y, yerr, linearhp, samples1[0], samples1[1], samples1[2], samples1[3], samples1[4], samples1[5])
-    gof_quad = chi2_gof(Erest, y, yerr, quadhp, samples2[0], samples2[1], samples2[2], samples2[3], samples2[4], samples2[5])
-
-
+    print(grb, gof_null, gof_lin, gof_quad)
     with open('./outputs/GOF_xerr/' + grb + '_GOF.txt', 'w') as f:
         f.write(str(gof_null) + '\n')
         f.write(str(gof_lin) + '\n')
